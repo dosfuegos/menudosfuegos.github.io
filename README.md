@@ -1,2 +1,2 @@
 # menudosfuegos.github.io
-Menu del dua dos Fuegos
+Menu del dia dos Fuegos
