@@ -582,6 +582,19 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;disp
       </div>
     </div>
   </div>
+  <div class="backup-box" style="border-color:rgba(0,184,148,.3);">
+    <h3 style="color:var(--grn);">🤖 Escribir menú con IA</h3>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:10px;line-height:1.5;">Escribe el menú de la semana en texto libre — como me lo mandas a mí. La IA detecta los días, platos y precios automáticamente.</p>
+    <textarea id="ia-menu-input" placeholder="Ejemplo:
+Lunes tallarines en salsa alfredo 5500 y milanesa de pollo napolitana 9990
+Martes lasaña de pollo 5500 y carne al horno con papas 9990
+Miércoles chow mein de pollo 5500..." style="width:100%;height:140px;padding:10px;background:#fff;border:1.5px solid var(--bord);border-radius:10px;font-size:12px;color:var(--txt);font-family:'DM Sans',sans-serif;outline:none;resize:vertical;box-sizing:border-box;line-height:1.6;"></textarea>
+    <button onclick="interpretarMenuIA()" style="width:100%;padding:12px;margin-top:10px;background:linear-gradient(135deg,var(--grn),var(--grn2));border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+      🤖 Interpretar y revisar menú
+    </button>
+    <div id="ia-menu-resultado" style="margin-top:10px;"></div>
+  </div>
+
   <div class="backup-box" style="border-color:rgba(253,203,110,.4);">
     <h3 style="color:#e17055;">📅 Cargar menú semana</h3>
     <p style="font-size:11px;color:var(--mut);margin-bottom:10px;line-height:1.5;">Fuerza la carga del menú semanal precargado directamente en Firebase. Úsalo si el menú no aparece en la sección Menú.</p>
@@ -2005,6 +2018,105 @@ function actualizarApp(input){
     });
   };
   reader.readAsText(file);
+}
+
+// ── INTERPRETAR MENÚ CON IA ───────────────────────────────────────────────────
+let iaMenuParsed = null;
+
+async function interpretarMenuIA(){
+  const texto = document.getElementById('ia-menu-input').value.trim();
+  const res = document.getElementById('ia-menu-resultado');
+  if(!texto){ res.innerHTML = '<p style="color:var(--red2);font-size:12px;">⚠️ Escribe el menú primero.</p>'; return; }
+  res.innerHTML = '<p style="color:var(--mut);font-size:12px;">🤖 Interpretando con IA...</p>';
+
+  const semana = getWeek();
+  const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  let semanaInfo = dias.map((d,i) => `${d}: ${semana[i]}`).join('\n');
+
+  const prompt = `Eres un asistente para un restaurante chileno llamado Dos Fuegos.
+El usuario escribió el menú de la semana en texto libre. Extrae la información y devuelve SOLO un JSON sin markdown.
+
+Semana actual:
+${semanaInfo}
+
+Texto:
+"""
+${texto}
+"""
+
+Formato JSON requerido:
+{"dias":[{"fecha":"2026-06-09","dia":"Martes","platos":[{"nombre":"Lasaña de Pollo","precio":5500}]}],"advertencias":["Viernes: no encontré precio para Handroll"]}
+
+Reglas:
+- Si no hay precio pon precio:0 y agrega advertencia
+- Si el día no está mencionado no lo incluyas
+- Precios como números enteros sin puntos ni símbolo $
+- Nombres con mayúscula inicial
+- Devuelve SOLO el JSON`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await response.json();
+    const txt = data.content?.find(b=>b.type==='text')?.text||'';
+    const clean = txt.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    iaMenuParsed = parsed;
+    mostrarRevisionMenuIA(parsed);
+  } catch(e){
+    console.error(e);
+    res.innerHTML = '<p style="color:var(--red2);font-size:12px;">❌ Error al interpretar. Intenta de nuevo.</p>';
+  }
+}
+
+function mostrarRevisionMenuIA(parsed){
+  const res = document.getElementById('ia-menu-resultado');
+  let html = '<div style="background:var(--bg);border-radius:12px;padding:12px;margin-top:4px;">';
+  html += '<div style="font-size:12px;font-weight:700;color:var(--txt);margin-bottom:8px;">📋 Esto encontré — revisa antes de guardar:</div>';
+  parsed.dias.forEach((d,di) => {
+    html += `<div style="margin-bottom:10px;padding:8px;background:#fff;border-radius:8px;border:1px solid var(--bord);">`;
+    html += `<div style="font-size:12px;font-weight:700;color:var(--primary2);margin-bottom:4px;">📅 ${d.dia} ${d.fecha}</div>`;
+    d.platos.forEach((p,pi) => {
+      const sinP = !p.precio || p.precio===0;
+      html += `<div style="display:flex;gap:6px;margin-bottom:4px;">`;
+      html += `<input type="text" value="${p.nombre}" onchange="iaMenuParsed.dias[${di}].platos[${pi}].nombre=this.value" style="flex:1;padding:5px 8px;border:1px solid var(--bord);border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;"/>`;
+      html += `<input type="number" value="${p.precio||''}" placeholder="Precio" onchange="iaMenuParsed.dias[${di}].platos[${pi}].precio=parseInt(this.value)||0" style="width:80px;padding:5px 8px;border:1.5px solid ${sinP?'var(--red2)':'var(--bord)'};border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;${sinP?'background:#fff5f5':''}"/>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+  if(parsed.advertencias?.length){
+    html += '<div style="background:#fff8e1;border-radius:8px;padding:8px;margin-bottom:8px;">';
+    html += '<div style="font-size:11px;font-weight:700;color:#e17055;margin-bottom:4px;">⚠️ Revisar:</div>';
+    parsed.advertencias.forEach(a => { html += `<div style="font-size:11px;color:#e17055;">• ${a}</div>`; });
+    html += '</div>';
+  }
+  html += `<button onclick="confirmarMenuIA()" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--grn),var(--grn2));border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">✅ Confirmar y guardar menú</button>`;
+  html += '</div>';
+  res.innerHTML = html;
+}
+
+function confirmarMenuIA(){
+  if(!iaMenuParsed) return;
+  let sinPrecio = [];
+  iaMenuParsed.dias.forEach(d => { d.platos.forEach(p => { if(!p.precio||p.precio===0) sinPrecio.push(`${d.dia}: ${p.nombre}`); }); });
+  if(sinPrecio.length > 0){ toast(`⚠️ Falta precio: ${sinPrecio[0]}`,'red',4000); return; }
+  iaMenuParsed.dias.forEach(d => {
+    menuDB[d.fecha] = d.platos.map(p => ({nombre:p.nombre, precio:p.precio, ings:[]}));
+  });
+  saveAll();
+  toast('✅ Menú guardado','green',4000);
+  document.getElementById('ia-menu-resultado').innerHTML = '<p style="color:var(--grn);font-size:12px;font-weight:700;text-align:center;">✅ ¡Menú guardado! Ya aparece en la pestaña Menú.</p>';
+  document.getElementById('ia-menu-input').value = '';
+  iaMenuParsed = null;
+  setTimeout(()=>showTab('menu'),1500);
 }
 
 // ── FORZAR MENÚ SEMANA DIRECTAMENTE EN FIREBASE ──────────────────────────────
