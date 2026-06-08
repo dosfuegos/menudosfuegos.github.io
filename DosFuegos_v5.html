@@ -584,7 +584,13 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;disp
   </div>
   <div class="backup-box" style="border-color:rgba(0,184,148,.3);">
     <h3 style="color:var(--grn);">🤖 Escribir menú con IA</h3>
-    <p style="font-size:11px;color:var(--mut);margin-bottom:10px;line-height:1.5;">Escribe el menú de la semana en texto libre — como me lo mandas a mí. La IA detecta los días, platos y precios automáticamente.</p>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:10px;line-height:1.5;">Escribe el menú de la semana en texto libre. La IA detecta los días, platos y precios automáticamente.</p>
+
+    <!-- Selector de semana -->
+    <label style="font-size:11px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px;">¿Para qué semana es este menú?</label>
+    <div id="ia-semana-selector" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;"></div>
+    <div id="ia-semana-label" style="font-size:11px;color:var(--grn);font-weight:700;text-align:center;margin-bottom:8px;"></div>
+
     <textarea id="ia-menu-input" placeholder="Ejemplo:
 Lunes tallarines en salsa alfredo 5500 y milanesa de pollo napolitana 9990
 Martes lasaña de pollo 5500 y carne al horno con papas 9990
@@ -2022,6 +2028,36 @@ function actualizarApp(input){
 
 // ── INTERPRETAR MENÚ CON IA ───────────────────────────────────────────────────
 let iaMenuParsed = null;
+let iaWeekOffset = 0; // 0=esta semana, 1=próxima, 2=en 2 semanas, etc.
+
+function renderSemanaSelector(){
+  const cont = document.getElementById('ia-semana-selector');
+  const lbl = document.getElementById('ia-semana-label');
+  if(!cont) return;
+  const opciones = [
+    {offset:0, label:'Esta semana'},
+    {offset:1, label:'Semana siguiente'},
+    {offset:2, label:'En 2 semanas'},
+    {offset:3, label:'En 3 semanas'},
+  ];
+  cont.innerHTML = opciones.map(o => {
+    const semana = getWeekWithOffset(o.offset);
+    const lunes = semana[0]; const dom = semana[6];
+    const fmt = d => { const [y,m,dd] = d.split('-'); return `${dd}/${m}`; };
+    const sel = iaWeekOffset === o.offset;
+    return `<button onclick="seleccionarSemanaIA(${o.offset})" style="width:100%;padding:9px 12px;background:${sel?'var(--grn)':'var(--bg)'};border:1.5px solid ${sel?'var(--grn)':'var(--bord)'};border-radius:9px;color:${sel?'#fff':'var(--txt)'};font-size:12px;font-weight:${sel?'700':'400'};cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;">
+      ${sel?'✅ ':''}${o.label} <span style="opacity:.7;font-size:11px;">(${fmt(lunes)} – ${fmt(dom)})</span>
+    </button>`;
+  }).join('');
+  const semSel = getWeekWithOffset(iaWeekOffset);
+  const fmt2 = d => { const [y,m,dd] = d.split('-'); const meses=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; return `${dd} ${meses[parseInt(m)]}`; };
+  if(lbl) lbl.innerHTML = `📅 Semana seleccionada: ${fmt2(semSel[0])} – ${fmt2(semSel[6])} ${semSel[0].split('-')[0]}`;
+}
+
+function seleccionarSemanaIA(offset){
+  iaWeekOffset = offset;
+  renderSemanaSelector();
+}
 
 async function interpretarMenuIA(){
   const texto = document.getElementById('ia-menu-input').value.trim();
@@ -2029,14 +2065,14 @@ async function interpretarMenuIA(){
   if(!texto){ res.innerHTML = '<p style="color:var(--red2);font-size:12px;">⚠️ Escribe el menú primero.</p>'; return; }
   res.innerHTML = '<p style="color:var(--mut);font-size:12px;">🤖 Interpretando con IA...</p>';
 
-  const semana = getWeek();
+  const semana = getWeekWithOffset(iaWeekOffset);
   const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-  let semanaInfo = dias.map((d,i) => `${d}: ${semana[i]}`).join('\n');
+  const semanaInfo = dias.map((d,i) => `${d}: ${semana[i]}`).join('\n');
 
   const prompt = `Eres un asistente para un restaurante chileno llamado Dos Fuegos.
 El usuario escribió el menú de la semana en texto libre. Extrae la información y devuelve SOLO un JSON sin markdown.
 
-Semana actual:
+Semana seleccionada:
 ${semanaInfo}
 
 Texto:
@@ -2181,6 +2217,7 @@ function renderCfg(){
   document.getElementById('data-orders').textContent=orders.length;
   document.getElementById('data-hist').textContent=history.length;
   document.getElementById('data-platos').textContent=platoDB.length;
+  renderSemanaSelector();
 }
 function manualRepair(){
   repairOldOrders();
