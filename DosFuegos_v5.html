@@ -1036,7 +1036,8 @@ function renderBoleta(){
   const subtotal = o.items.reduce((s,it)=>s+(it.precio*it.qty),0);
   const delivery = boletaConDelivery ? (o.dm==='u'?1000:(o.dc||0)) : 0;
   const total = subtotal + delivery;
-  const pagoLabel = o.p==='t'?`💳 Transferencia${o.banco?' · '+bancNombre(o.banco):''}`:o.p==='f'?'📋 Fiado':'💵 Efectivo';
+  const bancoSel = window.boletaBancoSel || '';
+  const pagoLabel = o.p==='t'?`💳 Transferencia${bancoSel?' · '+bancNombre(bancoSel):''}`:o.p==='f'?'📋 Fiado':'💵 Efectivo';
   const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const fecha = new Date(o.dt+'T12:00');
@@ -1048,7 +1049,6 @@ function renderBoleta(){
       <div style="font-size:18px;">🔥</div>
       <div style="font-weight:800;font-size:15px;letter-spacing:1px;">DOS FUEGOS</div>
       <div style="font-size:11px;color:var(--mut);">Pucón · @dosfuegounsabor</div>
-      <div style="font-size:11px;color:var(--mut);">+569 4104 8327</div>
       <div style="border-top:1px dashed #ccc;margin:8px 0;"></div>
     </div>
     <div><b>Cliente:</b> ${esc(o.n)}</div>
@@ -1081,24 +1081,33 @@ function renderBoleta(){
 
   <div style="margin-top:12px;">
     <div style="font-size:12px;font-weight:800;color:var(--primary);margin-bottom:8px;letter-spacing:.3px;">💳 DATOS DE TRANSFERENCIA</div>
+    <div style="font-size:11px;color:var(--mut);margin-bottom:8px;">Toca un banco para seleccionarlo en la boleta:</div>
     ${[
       {key:'bancoestado', icon:'🟩', nombre:'BancoEstado CuentaRUT', titular:'Manuel Alejandro Arias Cornejo', rut:'26.083.389-8', cuenta:'26083389', email:''},
       {key:'bancochile',  icon:'🟨', nombre:'Banco de Chile Cuenta Vista', titular:'Manuel Arias', rut:'', cuenta:'00-022-30211-02', email:'manuelarias_260@hotmail.com'},
       {key:'falabella',   icon:'🟦', nombre:'Banco Falabella Cta. Corriente', titular:'Manuel Alejandro Arias', rut:'', cuenta:'1-999-057109-8', email:'manuelarias_260@hotmail.com'},
       {key:'santander',   icon:'🟥', nombre:'Banco Santander Cta. Corriente', titular:'Manuel Alejandro Arias Cornejo', rut:'', cuenta:'0-000-80-17947-2', email:'manuelarias_260@hotmail.com'},
-    ].map(b=>`
-      <div style="background:#fff;border-radius:12px;padding:11px 13px;margin-bottom:8px;box-shadow:0 1px 5px rgba(0,0,0,.07);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    ].map(b=>{
+      const sel = bancoSel === b.key;
+      return `
+      <div onclick="seleccionarBancoBoleta('${b.key}')" style="background:${sel?'rgba(0,184,148,.08)':'#fff'};border-radius:12px;padding:11px 13px;margin-bottom:8px;box-shadow:0 1px 5px rgba(0,0,0,.07);display:flex;justify-content:space-between;align-items:center;gap:8px;border:1.5px solid ${sel?'var(--grn)':'transparent'};cursor:pointer;">
         <div style="flex:1;min-width:0;">
-          <div style="font-size:12px;font-weight:700;color:var(--primary);">${b.icon} ${b.nombre}</div>
+          <div style="font-size:12px;font-weight:700;color:${sel?'var(--grn)':'var(--primary)'};">${sel?'✅ ':''}${b.icon} ${b.nombre}</div>
           <div style="font-size:11px;color:var(--mut);margin-top:2px;">${b.titular}${b.rut?` · RUT ${b.rut}`:''}</div>
           <div style="font-size:11px;color:var(--txt);font-weight:600;">N° ${b.cuenta}${b.email?`<br><span style='font-weight:400;color:var(--mut);'>${b.email}</span>`:''}</div>
         </div>
-        <button onclick="copiarBanco('${b.key}')" style="flex-shrink:0;background:rgba(9,132,227,.1);border:1.5px solid rgba(9,132,227,.3);border-radius:10px;padding:8px 12px;color:var(--blu);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">📋 Copiar</button>
-      </div>
-    `).join('')}
+        <button onclick="event.stopPropagation();copiarBanco('${b.key}')" style="flex-shrink:0;background:${sel?'rgba(0,184,148,.15)':'rgba(9,132,227,.1)'};border:1.5px solid ${sel?'var(--grn)':'rgba(9,132,227,.3)'};border-radius:10px;padding:8px 12px;color:${sel?'var(--grn)':'var(--blu)'};font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">📋 Copiar</button>
+      </div>`;
+    }).join('')}
   </div>`;
 
   document.getElementById('boleta-content').innerHTML = html;
+}
+
+function seleccionarBancoBoleta(key){
+  window.boletaBancoSel = (window.boletaBancoSel === key) ? '' : key;
+  renderBoleta();
+  if(window.boletaBancoSel) toast(`✅ ${bancNombre(key)} seleccionado en boleta`,'green',2000);
 }
 
 function bancNombre(b){
@@ -1137,13 +1146,14 @@ function getBoletaTexto(){
   const subtotal = o.items.reduce((s,it)=>s+(it.precio*it.qty),0);
   const delivery = boletaConDelivery ? (o.dm==='u'?1000:(o.dc||0)) : 0;
   const total = subtotal + delivery;
-  const pagoLabel = o.p==='t'?`Transferencia${o.banco?' · '+bancNombre(o.banco):''}`:o.p==='f'?'Fiado':'Efectivo';
+  const bancoSel = window.boletaBancoSel || o.banco || '';
+  const pagoLabel = o.p==='t'?`Transferencia${bancoSel?' · '+bancNombre(bancoSel):''}`:o.p==='f'?'Fiado':'Efectivo';
   const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const fecha = new Date(o.dt+'T12:00');
   const fechaLabel = `${DIAS[fecha.getDay()]} ${fecha.getDate()} de ${MESES[fecha.getMonth()]}`;
 
-  let txt = `🔥 *DOS FUEGOS*\nPucón · @dosfuegounsabor\n+569 4104 8327\n`;
+  let txt = `🔥 *DOS FUEGOS*\nPucón · @dosfuegounsabor\n`;
   txt += `━━━━━━━━━━━━━━━━━\n`;
   txt += `*Cliente:* ${o.n}\n`;
   if(o.d) txt += `*Dirección:* ${o.d}\n`;
@@ -1156,6 +1166,17 @@ function getBoletaTexto(){
   txt += `━━━━━━━━━━━━━━━━━\n`;
   txt += `*TOTAL: ${fm(total)}*\n`;
   txt += `Pago: ${pagoLabel}`;
+
+  // Agregar datos del banco seleccionado
+  if(bancoSel && o.p==='t'){
+    const bancos = {
+      bancoestado: `\n\n💳 *Datos de transferencia:*\nBancoEstado CuentaRUT\nManuel Alejandro Arias Cornejo\nRUT: 26.083.389-8\nN° 26083389`,
+      bancochile:  `\n\n💳 *Datos de transferencia:*\nBanco de Chile Cuenta Vista\nManuel Arias\nN° 00-022-30211-02\nmanuelarias_260@hotmail.com`,
+      falabella:   `\n\n💳 *Datos de transferencia:*\nBanco Falabella Cta. Corriente\nManuel Alejandro Arias\nN° 1-999-057109-8\nmanuelarias_260@hotmail.com`,
+      santander:   `\n\n💳 *Datos de transferencia:*\nBanco Santander Cta. Corriente\nManuel Alejandro Arias Cornejo\nN° 0-000-80-17947-2\nmanuelarias_260@hotmail.com`,
+    };
+    if(bancos[bancoSel]) txt += bancos[bancoSel];
+  }
   return txt;
 }
 
