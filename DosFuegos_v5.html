@@ -885,6 +885,60 @@ function loadFromFirebase(){
       if(data.checks) checks = data.checks;
       if(data.extras) extras = data.extras;
       if(data.fiados){ fiados = data.fiados; sv('df3_fiados', JSON.stringify(fiados)); }
+
+      // ── FORZAR MENÚS NUEVOS DESPUÉS DE CARGAR FIREBASE ──────────────────────
+      // Estas fechas se fuerzan aunque Firebase ya tenga datos (semanas nuevas)
+      const FORCE_AFTER_FIREBASE = [
+        '2026-06-08','2026-06-09','2026-06-10','2026-06-11',
+        '2026-06-12','2026-06-13','2026-06-14'
+      ];
+      const MENU_FORZADO = {
+        '2026-06-08': [
+          {nombre:'Tallarines en Salsa Alfredo',precio:5500,ings:[{name:'Tallarines',qty:''},{name:'Crema',qty:''},{name:'Mantequilla',qty:''},{name:'Queso parmesano',qty:''},{name:'Ajo',qty:''},{name:'Pan de ajo',qty:''},{name:'Salsa picante',qty:''}]},
+          {nombre:'Milanesa de Pollo Napolitana con Papas Rústicas',precio:9990,ings:[{name:'Pechuga de pollo',qty:''},{name:'Pan rallado',qty:''},{name:'Huevo',qty:''},{name:'Salsa de tomate',qty:''},{name:'Jamón',qty:''},{name:'Queso mozzarella',qty:''},{name:'Papa',qty:''},{name:'Romero',qty:''}]}
+        ],
+        '2026-06-09': [
+          {nombre:'Lasaña de Pollo',precio:5500,ings:[{name:'Láminas de pasta',qty:''},{name:'Pollo desmenuzado',qty:''},{name:'Salsa de tomate',qty:''},{name:'Bechamel',qty:''},{name:'Queso mozzarella',qty:''},{name:'Pan de ajo',qty:''}]},
+          {nombre:'Carne al Horno con Papas Rústicas',precio:9990,ings:[{name:'Posta de vacuno',qty:''},{name:'Ajo',qty:''},{name:'Romero',qty:''},{name:'Papa',qty:''},{name:'Aceite de oliva',qty:''},{name:'Sal y pimienta',qty:''}]}
+        ],
+        '2026-06-10': [
+          {nombre:'Chow Mein de Pollo',precio:5500,ings:[{name:'Fideos chinos',qty:''},{name:'Pollo',qty:''},{name:'Zanahoria',qty:''},{name:'Repollo',qty:''},{name:'Salsa de soya',qty:''},{name:'Jengibre',qty:''},{name:'Ajo',qty:''}]},
+          {nombre:'Chow Mein de Camarón',precio:7990,ings:[{name:'Fideos chinos',qty:''},{name:'Camarón',qty:''},{name:'Zanahoria',qty:''},{name:'Repollo',qty:''},{name:'Salsa de soya',qty:''},{name:'Jengibre',qty:''}]},
+          {nombre:'Club Sándwich',precio:9990,ings:[{name:'Pan molde',qty:''},{name:'Pollo',qty:''},{name:'Jamón',qty:''},{name:'Queso',qty:''},{name:'Huevo',qty:''},{name:'Lechuga',qty:''},{name:'Tomate',qty:''},{name:'Mayonesa',qty:''},{name:'Papas fritas',qty:''}]}
+        ],
+        '2026-06-11': [
+          {nombre:'Arroz Frito de Pollo + 1 Arrollado Primavera',precio:6500,ings:[{name:'Arroz',qty:''},{name:'Pollo',qty:''},{name:'Huevo',qty:''},{name:'Zanahoria',qty:''},{name:'Arrollado primavera',qty:'1'},{name:'Salsa de soya',qty:''}]},
+          {nombre:'Combo Arroz Frito + 2 Primavera + Pollo Agridulce',precio:9990,ings:[{name:'Arroz frito',qty:''},{name:'Arrollado primavera',qty:'2'},{name:'Pollo agridulce',qty:''},{name:'Salsa agridulce',qty:''}]}
+        ],
+        '2026-06-12': [
+          {nombre:'Handroll de Pollo',precio:5500,ings:[{name:'Arroz sushi',qty:''},{name:'Pollo',qty:''},{name:'Queso crema',qty:''},{name:'Cebollín',qty:''},{name:'Panko',qty:''},{name:'Alga nori',qty:''}]},
+          {nombre:'Combo Kai',precio:9990,ings:[{name:'Pollo apañado',qty:''},{name:'Queso crema',qty:''},{name:'Palta',qty:''},{name:'Camarón tempura',qty:''},{name:'Sésamo',qty:''}]},
+          {nombre:'Combo Kyu',precio:9990,ings:[{name:'Salmón',qty:''},{name:'Queso crema',qty:''},{name:'Palta',qty:''},{name:'Pepino',qty:''},{name:'Sésamo',qty:''}]},
+          {nombre:'Combo Dos Fuegos',precio:13990,ings:[{name:'Variedad sushi',qty:''},{name:'Handroll',qty:''},{name:'Nigiri',qty:''},{name:'Maki',qty:''}]}
+        ],
+        '2026-06-13': [
+          {nombre:'Shawarma',precio:9990,ings:[{name:'Pollo marinado',qty:''},{name:'Pan árabe',qty:''},{name:'Lechuga',qty:''},{name:'Tomate',qty:''},{name:'Queso crema',qty:''},{name:'Salsa tahini',qty:''},{name:'Cebolla morada',qty:''}]},
+          {nombre:'Poke',precio:7990,ings:[{name:'Arroz',qty:''},{name:'Salmón',qty:''},{name:'Palta',qty:''},{name:'Edamame',qty:''},{name:'Zanahoria',qty:''},{name:'Salsa ponzu',qty:''}]}
+        ],
+        '2026-06-14': [
+          {nombre:'Empanada de Pollo',precio:3500,ings:[{name:'Masa empanada',qty:''},{name:'Pollo',qty:''},{name:'Cebolla',qty:''},{name:'Pimentón',qty:''}]},
+          {nombre:'Empanada Mechada',precio:3500,ings:[{name:'Masa empanada',qty:''},{name:'Carne mechada',qty:''},{name:'Cebolla',qty:''},{name:'Huevo duro',qty:''},{name:'Aceitunas',qty:''}]},
+          {nombre:'Empanada Jamón Queso',precio:3500,ings:[{name:'Masa empanada',qty:''},{name:'Jamón',qty:''},{name:'Queso',qty:''}]}
+        ]
+      };
+      let menuForzado = false;
+      FORCE_AFTER_FIREBASE.forEach(date => {
+        if(MENU_FORZADO[date]){
+          menuDB[date] = MENU_FORZADO[date];
+          menuForzado = true;
+        }
+      });
+      if(menuForzado){
+        console.log('📅 Menús semana 08-14 jun forzados en Firebase');
+        saveToFirebase();
+      }
+      // ── FIN FORZADO MENÚS ────────────────────────────────────────────────────
+
       saveAll();
       renderOrd();
       renderCobros();
