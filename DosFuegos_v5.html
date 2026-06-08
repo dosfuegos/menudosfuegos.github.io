@@ -2045,13 +2045,27 @@ function renderSemanaSelector(){
     const lunes = semana[0]; const dom = semana[6];
     const fmt = d => { const [y,m,dd] = d.split('-'); return `${dd}/${m}`; };
     const sel = iaWeekOffset === o.offset;
-    return `<button onclick="seleccionarSemanaIA(${o.offset})" style="width:100%;padding:9px 12px;background:${sel?'var(--grn)':'var(--bg)'};border:1.5px solid ${sel?'var(--grn)':'var(--bord)'};border-radius:9px;color:${sel?'#fff':'var(--txt)'};font-size:12px;font-weight:${sel?'700':'400'};cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;">
-      ${sel?'✅ ':''}${o.label} <span style="opacity:.7;font-size:11px;">(${fmt(lunes)} – ${fmt(dom)})</span>
+
+    // Verificar si la semana tiene menú cargado
+    const tieneDias = semana.filter(f => menuDB[f] && menuDB[f].length > 0);
+    const tieneMenu = tieneDias.length > 0;
+    const diasCon = tieneDias.length;
+
+    // Colores según estado
+    const bgColor = sel ? 'var(--grn)' : tieneMenu ? 'rgba(0,184,148,.08)' : 'var(--bg)';
+    const borderColor = sel ? 'var(--grn)' : tieneMenu ? 'var(--grn)' : 'var(--bord)';
+    const textColor = sel ? '#fff' : tieneMenu ? 'var(--grn)' : 'var(--txt)';
+    const indicador = tieneMenu ? `<span style="background:${sel?'rgba(255,255,255,.3)':'rgba(0,184,148,.15)'};color:${sel?'#fff':'var(--grn)'};font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700;">✅ ${diasCon}/7 días</span>` : `<span style="background:rgba(0,0,0,.05);color:var(--mut);font-size:10px;padding:2px 6px;border-radius:10px;">Sin menú</span>`;
+
+    return `<button onclick="seleccionarSemanaIA(${o.offset})" style="width:100%;padding:9px 12px;background:${bgColor};border:1.5px solid ${borderColor};border-radius:9px;color:${textColor};font-size:12px;font-weight:${sel||tieneMenu?'700':'400'};cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;justify-content:space-between;align-items:center;">
+      <span>${sel?'▶ ':''}${o.label} <span style="opacity:.7;font-size:11px;">(${fmt(lunes)}–${fmt(dom)})</span></span>
+      ${indicador}
     </button>`;
   }).join('');
+
   const semSel = getWeekWithOffset(iaWeekOffset);
   const fmt2 = d => { const [y,m,dd] = d.split('-'); const meses=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; return `${dd} ${meses[parseInt(m)]}`; };
-  if(lbl) lbl.innerHTML = `📅 Semana seleccionada: ${fmt2(semSel[0])} – ${fmt2(semSel[6])} ${semSel[0].split('-')[0]}`;
+  if(lbl) lbl.innerHTML = `📅 Cargando para: <strong>${fmt2(semSel[0])} – ${fmt2(semSel[6])} ${semSel[0].split('-')[0]}</strong>`;
 }
 
 function seleccionarSemanaIA(offset){
@@ -2063,53 +2077,83 @@ async function interpretarMenuIA(){
   const texto = document.getElementById('ia-menu-input').value.trim();
   const res = document.getElementById('ia-menu-resultado');
   if(!texto){ res.innerHTML = '<p style="color:var(--red2);font-size:12px;">⚠️ Escribe el menú primero.</p>'; return; }
-  res.innerHTML = '<p style="color:var(--mut);font-size:12px;">🤖 Interpretando con IA...</p>';
+  res.innerHTML = '<p style="color:var(--mut);font-size:12px;">🤖 Interpretando...</p>';
 
   const semana = getWeekWithOffset(iaWeekOffset);
-  const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-  const semanaInfo = dias.map((d,i) => `${d}: ${semana[i]}`).join('\n');
+  const diasMap = {
+    'lunes':0,'martes':1,'miércoles':2,'miercoles':2,'miercoles':2,
+    'jueves':3,'viernes':4,'sábado':5,'sabado':5,'domingo':6
+  };
 
-  const prompt = `Eres un asistente para un restaurante chileno llamado Dos Fuegos.
-El usuario escribió el menú de la semana en texto libre. Extrae la información y devuelve SOLO un JSON sin markdown.
+  // Normalizar texto
+  const txt = texto.toLowerCase()
+    .replace(/á/g,'a').replace(/é/g,'e').replace(/í/g,'i').replace(/ó/g,'o').replace(/ú/g,'u')
+    .replace(/\n/g,' ').replace(/\s+/g,' ');
 
-Semana seleccionada:
-${semanaInfo}
+  // Dividir por días
+  const regexDia = /\b(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b/g;
+  const matches = [...txt.matchAll(regexDia)];
 
-Texto:
-"""
-${texto}
-"""
-
-Formato JSON requerido:
-{"dias":[{"fecha":"2026-06-09","dia":"Martes","platos":[{"nombre":"Lasaña de Pollo","precio":5500}]}],"advertencias":["Viernes: no encontré precio para Handroll"]}
-
-Reglas:
-- Si no hay precio pon precio:0 y agrega advertencia
-- Si el día no está mencionado no lo incluyas
-- Precios como números enteros sin puntos ni símbolo $
-- Nombres con mayúscula inicial
-- Devuelve SOLO el JSON`;
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-    const data = await response.json();
-    const txt = data.content?.find(b=>b.type==='text')?.text||'';
-    const clean = txt.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(clean);
-    iaMenuParsed = parsed;
-    mostrarRevisionMenuIA(parsed);
-  } catch(e){
-    console.error(e);
-    res.innerHTML = '<p style="color:var(--red2);font-size:12px;">❌ Error al interpretar. Intenta de nuevo.</p>';
+  if(matches.length === 0){
+    res.innerHTML = '<p style="color:var(--red2);font-size:12px;">⚠️ No encontré ningún día. Escribe "Lunes..., Martes...", etc.</p>';
+    return;
   }
+
+  const dias = [];
+  const advertencias = [];
+
+  matches.forEach((m, i) => {
+    const diaIdx = diasMap[m[1]];
+    const inicio = m.index + m[0].length;
+    const fin = i + 1 < matches.length ? matches[i+1].index : txt.length;
+    const contenido = txt.slice(inicio, fin).trim().replace(/^[:\-,\.]+/, '').trim();
+
+    // Separar platos por " y ", " / ", coma entre platos con precio
+    const separadores = /\s+y\s+(?=\w)|\/|\s*,\s*(?=\w)/;
+    let partes = contenido.split(separadores).map(p => p.trim()).filter(p => p.length > 3);
+
+    const platos = [];
+    partes.forEach(parte => {
+      // Extraer precio — buscar número de 3-5 dígitos
+      const precioMatch = parte.match(/\b(\d{3,5})\b/);
+      const precio = precioMatch ? parseInt(precioMatch[1]) : 0;
+
+      // Nombre = todo antes del precio, limpiado
+      let nombre = parte.replace(/\b\d{3,5}\b/, '').trim()
+        .replace(/^[,\.\-\s]+|[,\.\-\s]+$/g,'').trim();
+
+      // Capitalizar
+      nombre = nombre.charAt(0).toUpperCase() + nombre.slice(1);
+
+      // Reconstruir acentos básicos
+      nombre = nombre
+        .replace(/\bpollo\b/gi,'Pollo').replace(/\bcarne\b/gi,'Carne')
+        .replace(/\blasana\b/gi,'Lasaña').replace(/\bpure\b/gi,'Puré')
+        .replace(/\balbondigas\b/gi,'Albóndigas').replace(/\bcurry\b/gi,'Curry')
+        .replace(/\bempanada\b/gi,'Empanada').replace(/\bplateada\b/gi,'Plateada')
+        .replace(/\bsopa\b/gi,'Sopa').replace(/\barroz\b/gi,'Arroz')
+        .replace(/\bfideos\b/gi,'Fideos').replace(/\bpapas\b/gi,'Papas')
+        .replace(/\bensalada\b/gi,'Ensalada').replace(/\bchurrasco\b/gi,'Churrasco')
+        .replace(/\bsopaipillas\b/gi,'Sopaipillas').replace(/\bcazuela\b/gi,'Cazuela');
+
+      if(nombre.length > 2){
+        if(!precio) advertencias.push(`${m[1].charAt(0).toUpperCase()+m[1].slice(1)}: "${nombre}" no tiene precio`);
+        platos.push({nombre, precio});
+      }
+    });
+
+    if(platos.length > 0){
+      dias.push({fecha: semana[diaIdx], dia: m[1].charAt(0).toUpperCase()+m[1].slice(1), platos});
+    }
+  });
+
+  if(dias.length === 0){
+    res.innerHTML = '<p style="color:var(--red2);font-size:12px;">⚠️ No pude extraer platos. Revisa el formato e intenta de nuevo.</p>';
+    return;
+  }
+
+  iaMenuParsed = {dias, advertencias};
+  mostrarRevisionMenuIA(iaMenuParsed);
 }
 
 function mostrarRevisionMenuIA(parsed){
