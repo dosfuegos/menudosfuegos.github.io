@@ -276,6 +276,7 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;disp
   <div class="stats">
     <div class="pill"><span class="dot dp"></span><span id="cp">0</span></div>
     <div class="pill"><span class="dot dd"></span><span id="cd">0</span></div>
+    <button onclick="gp('cfg',null)" style="background:none;border:none;font-size:20px;cursor:pointer;padding:4px 6px;margin-left:4px;vertical-align:middle;" title="Configuración">⚙️</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -643,7 +644,7 @@ Miércoles chow mein de pollo 5500..." style="width:100%;height:140px;padding:10
   <button class="nb" onclick="gp('comp',this)"><span class="ni">🛒</span><span class="nl">Compras</span></button>
   <button class="nb" onclick="gp('turn',this)"><span class="ni">📊</span><span class="nl">Turno</span></button>
   <button class="nb" onclick="gp('hist',this)"><span class="ni">📅</span><span class="nl">Historial</span></button>
-  <button class="nb" onclick="gp('cuentas',this)"><span class="ni">💰</span><span class="nl">Cuentas</span></button><button class="nb" onclick="gp('cfg',this)"><span class="ni">⚙️</span><span class="nl">Config</span></button>
+  <button class="nb" onclick="gp('cuentas',this)"><span class="ni">💰</span><span class="nl">Cuentas</span></button>
 </div>
 
 <button class="fab" id="fab" onclick="openOM()">+</button>
@@ -1060,17 +1061,16 @@ function renderBoleta(){
     <div style="border-top:1px dashed #ccc;margin:8px 0;"></div>
     <div style="display:flex;justify-content:space-between;"><span>Subtotal</span><span>${fm(subtotal)}</span></div>`;
 
-  if(o.dm==='u'||o.dc){
-    html += `<div style="display:flex;justify-content:space-between;align-items:center;">
-      <span>Delivery
-        <label style="font-size:11px;margin-left:6px;cursor:pointer;">
-          <input type="checkbox" ${boletaConDelivery?'checked':''} onchange="boletaConDelivery=this.checked;renderBoleta();" style="vertical-align:middle;">
-          incluir
-        </label>
-      </span>
-      <span>${boletaConDelivery?fm(o.dm==='u'?1000:(o.dc||0)):'—'}</span>
-    </div>`;
-  }
+  const deliveryCosto = o.dm==='u'?1000:(o.dc||0);
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;">
+    <span>Delivery
+      <label style="font-size:11px;margin-left:6px;cursor:pointer;">
+        <input type="checkbox" ${boletaConDelivery?'checked':''} onchange="boletaConDelivery=this.checked;renderBoleta();" style="vertical-align:middle;">
+        incluir
+      </label>
+    </span>
+    <span>${boletaConDelivery?(deliveryCosto>0?fm(deliveryCosto):'$1.000'):'—'}</span>
+  </div>`;
 
   html += `
     <div style="border-top:2px solid #333;margin:8px 0;"></div>
@@ -1145,7 +1145,8 @@ function getBoletaTexto(){
   const o = orders.find(x=>x.id===boletaOrderId);
   if(!o) return '';
   const subtotal = o.items.reduce((s,it)=>s+(it.precio*it.qty),0);
-  const delivery = boletaConDelivery ? (o.dm==='u'?1000:(o.dc||0)) : 0;
+  const deliveryCosto = o.dm==='u'?1000:(o.dc||1000);
+  const delivery = boletaConDelivery ? deliveryCosto : 0;
   const total = subtotal + delivery;
   const bancoSel = window.boletaBancoSel || o.banco || '';
   const pagoLabel = o.p==='t'?`Transferencia${bancoSel?' · '+bancNombre(bancoSel):''}`:o.p==='f'?'Fiado':'Efectivo';
