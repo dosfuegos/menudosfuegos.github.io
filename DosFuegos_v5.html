@@ -2962,20 +2962,25 @@ function showNuevoFiado(){
 function cerrarModalFiado(){ document.getElementById('modal-fiado').style.display='none'; }
 
 function crearFiado(){
-  const nombre = document.getElementById('fiado-nombre').value.trim();
-  if(!nombre){ toast('⚠️ Ingresa el nombre del cliente'); return; }
+  const nombreEl = document.getElementById('fiado-nombre');
+  const telEl = document.getElementById('fiado-tel');
+  const freqEl = document.getElementById('fiado-freq');
+  if(!nombreEl){ toast('❌ Error interno','red',2000); return; }
+  const nombre = nombreEl.value.trim();
+  if(!nombre){ toast('⚠️ Ingresa el nombre del cliente','gold',2000); return; }
   if(fiados.find(f=>f.nombre.toLowerCase()===nombre.toLowerCase())){
-    toast('⚠️ Ya existe ese cliente');return;
+    toast('⚠️ Ya existe ese cliente','gold',2000); return;
   }
-  fiados.push({
-    id:'fiado_'+Date.now(),
+  const nuevoFiado = {
+    id: 'fiado_'+Date.now(),
     nombre,
-    tel: document.getElementById('fiado-tel').value.trim(),
-    freq: document.getElementById('fiado-freq').value,
+    tel: telEl ? telEl.value.trim() : '',
+    freq: freqEl ? freqEl.value : 'semanal',
     pagos: [],
     creado: Date.now()
-  });
-  saveFiados();
+  };
+  fiados.push(nuevoFiado);
+  saveAll();
   cerrarModalFiado();
   renderFiado();
   toast('✅ Cliente creado','green',2000);
