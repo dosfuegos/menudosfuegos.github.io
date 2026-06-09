@@ -2966,25 +2966,30 @@ function crearFiado(){
   const nombreEl = document.getElementById('fiado-nombre');
   const telEl = document.getElementById('fiado-tel');
   const freqEl = document.getElementById('fiado-freq');
-  if(!nombreEl){ toast('❌ Error interno','red',2000); return; }
+  if(!nombreEl){ alert('ERROR: no encuentra fiado-nombre'); return; }
   const nombre = nombreEl.value.trim();
   if(!nombre){ toast('⚠️ Ingresa el nombre del cliente','gold',2000); return; }
+  if(!Array.isArray(fiados)){ alert('ERROR: fiados no es array, es: ' + typeof fiados); fiados = []; }
   if(fiados.find(f=>f.nombre.toLowerCase()===nombre.toLowerCase())){
     toast('⚠️ Ya existe ese cliente','gold',2000); return;
   }
-  const nuevoFiado = {
-    id: 'fiado_'+Date.now(),
-    nombre,
-    tel: telEl ? telEl.value.trim() : '',
-    freq: freqEl ? freqEl.value : 'semanal',
-    pagos: [],
-    creado: Date.now()
-  };
-  fiados.push(nuevoFiado);
-  saveAll();
-  cerrarModalFiado();
-  renderFiado();
-  toast('✅ Cliente creado','green',2000);
+  try {
+    const nuevoFiado = {
+      id: 'fiado_'+Date.now(),
+      nombre,
+      tel: telEl ? telEl.value.trim() : '',
+      freq: freqEl ? freqEl.value : 'semanal',
+      pagos: [],
+      creado: Date.now()
+    };
+    fiados.push(nuevoFiado);
+    saveAll();
+    cerrarModalFiado();
+    renderFiado();
+    toast('✅ Cliente creado','green',2000);
+  } catch(e) {
+    alert('ERROR en crearFiado: ' + e.message);
+  }
 }
 
 function verEstadoCuenta(fiadoId){
