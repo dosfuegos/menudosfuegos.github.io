@@ -1804,26 +1804,83 @@ function renderTurn(){
   const dc={};tod.forEach(o=>{(o.items||[]).forEach(it=>{const nm=it.nombre||'Plato';dc[nm]=(dc[nm]||0)+it.qty;});});
   const top=Object.entries(dc).sort((a,b)=>b[1]-a[1]);
   const dayLabel = isToday?'hoy':fdh(viewTurnDay);
-  // Check if there's a closed report for this day
   const histRep = history.find(r=>r.date===viewTurnDay);
-  document.getElementById('tprev').innerHTML=`
-    ${histRep&&!isToday?`<div style="background:rgba(0,184,148,.08);border:1.5px solid var(--grn);border-radius:var(--r);padding:9px 13px;margin-bottom:13px;font-size:11px;color:var(--grn);font-weight:600;">✅ Turno cerrado · ${new Date(histRep.closedAt).toLocaleString('es-CL')}</div>`:''}
-    ${!tod.length&&!histRep?`<div class="empty"><div class="ei">📊</div><h3>Sin pedidos</h3><p>No hay pedidos registrados para ${dayLabel}</p></div>`:`
-    <div class="rgrid">
+
+  let html = '';
+
+  // Turno cerrado
+  if(histRep&&!isToday){
+    html += `<div style="background:rgba(0,184,148,.08);border:1.5px solid var(--grn);border-radius:var(--r);padding:9px 13px;margin-bottom:13px;font-size:11px;color:var(--grn);font-weight:600;">✅ Turno cerrado · ${new Date(histRep.closedAt).toLocaleString('es-CL')}</div>`;
+  }
+
+  // Sin pedidos
+  if(!tod.length&&!histRep){
+    html += `<div class="empty"><div class="ei">📊</div><h3>Sin pedidos</h3><p>No hay pedidos registrados para ${dayLabel}</p></div>`;
+  } else {
+    // Grid de totales
+    html += `<div class="rgrid">
       <div class="ri hl"><div class="rv">${fm(tPaid)}</div><div class="rl">💰 Total cobrado</div></div>
       <div class="ri" style="border-color:rgba(225,112,85,.3)"><div class="rv" style="color:var(--accent)">${fm(tUnpaid)}</div><div class="rl">⏳ Por cobrar</div></div>
       <div class="ri"><div class="rv">${fm(tP)}</div><div class="rl">Ventas platos</div></div>
       <div class="ri"><div class="rv">${fm(tD)}</div><div class="rl">Delivery</div></div>
       <div class="ri"><div class="rv">${tod.length}</div><div class="rl">Pedidos</div></div>
       <div class="ri"><div class="rv" style="color:var(--grn)">${done.length}</div><div class="rl">Entregados</div></div>
-    </div>
-    <div class="ssub">Forma de pago</div>
-    <div class="psp"><div class="psi"><div class="psv">${fm(tT)}</div><div class="psl">💳 Transferencia</div></div><div class="psi"><div class="psv">${fm(tE)}</div><div class="psl">💵 Efectivo</div></div>${tF>0?`<div class="psi"><div class="psv">${fm(tF)}</div><div class="psl">📋 Fiado</div></div>`:''}</div>
-    ${unpaid.length?`<div class="ssub" style="color:var(--accent);">⏳ Sin cobrar (${unpaid.length})</div>
-    ${unpaid.map(o=>`<div class="pend-pago"><span class="pp-name">${esc(o.n)}</span><div style="display:flex;align-items:center;gap:8px;"><span class="pp-amt">${fm(getItemTotal(o))}</span><button class="pp-btn" onclick="togglePaid('${o.id}');renderTurn()">✓ Cobrar</button></div></div>`).join('')}`:''}
-    ${top.length?`<div class="ssub">Platos vendidos</div>${top.map(([n,c])=>`<div class="drep"><span>${esc(n)}</span><span class="dc">${c}x</span></div>`).join('')}`:''}
-    ${pend.length?`<div class="ssub" style="color:var(--red2);">⚠️ Sin entregar (${pend.length})</div>${pend.map(o=>`<div class="pend-it"><div class="pn">${esc(o.n)}</div><div class="pd">🕐 ${o.h} · 📍 ${esc(o.d||'Sin dir')}</div></div>`).join('')}`:''}`}
-  `;
+    </div>`;
+
+    // Forma de pago
+    html += `<div class="ssub">Forma de pago</div>
+    <div class="psp">
+      <div class="psi"><div class="psv">${fm(tT)}</div><div class="psl">💳 Transferencia</div></div>
+      <div class="psi"><div class="psv">${fm(tE)}</div><div class="psl">💵 Efectivo</div></div>
+      ${tF>0?`<div class="psi"><div class="psv">${fm(tF)}</div><div class="psl">📋 Fiado</div></div>`:''}
+    </div>`;
+
+    // Sin cobrar
+    if(unpaid.length){
+      html += `<div class="ssub" style="color:var(--accent);">⏳ Sin cobrar (${unpaid.length})</div>`;
+      unpaid.forEach(o=>{
+        html += `<div class="pend-pago"><span class="pp-name">${esc(o.n)}</span><div style="display:flex;align-items:center;gap:8px;"><span class="pp-amt">${fm(getItemTotal(o))}</span><button class="pp-btn" onclick="togglePaid('${o.id}');renderTurn()">✓ Cobrar</button></div></div>`;
+      });
+    }
+
+    // Platos vendidos
+    if(top.length){
+      html += `<div class="ssub">Platos vendidos</div>`;
+      top.forEach(([n,c])=>{ html += `<div class="drep"><span>${esc(n)}</span><span class="dc">${c}x</span></div>`; });
+    }
+
+    // Sin entregar
+    if(pend.length){
+      html += `<div class="ssub" style="color:var(--red2);">⚠️ Sin entregar (${pend.length})</div>`;
+      pend.forEach(o=>{ html += `<div class="pend-it"><div class="pn">${esc(o.n)}</div><div class="pd">🕐 ${o.h} · 📍 ${esc(o.d||'Sin dir')}</div></div>`; });
+    }
+
+    // Clientes del día
+    if(tod.length){
+      html += `<div class="ssub">👥 Clientes del día</div>`;
+      tod.forEach(o=>{
+        const tot = getItemTotal(o);
+        const pagoIcon = o.p==='t'?'💳':o.p==='f'?'📋':'💵';
+        const pagoNom = o.p==='t'?('Transferencia'+(o.banco?' · '+bancNombre(o.banco):'')):(o.p==='f'?'Fiado':'Efectivo');
+        const estadoPago = o.paid?'✅':'⏳';
+        html += `<div style="background:var(--card);border-radius:var(--r);padding:10px 13px;margin-bottom:7px;border:1px solid var(--bord);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-weight:700;font-size:13px;">${esc(o.n)}</span>
+            <span style="font-weight:700;color:var(--grn);font-size:13px;">${fm(tot)}</span>
+          </div>
+          <div style="font-size:11px;color:var(--mut);margin-bottom:6px;">${(o.items||[]).map(it=>(it.qty>1?it.qty+'x ':'')+it.nombre).join(', ')}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;">${pagoIcon} ${pagoNom} ${estadoPago}</span>
+            <button onclick="cambiarPago('${o.id}')" style="font-size:10px;padding:4px 8px;background:rgba(108,92,231,.08);border:1px solid rgba(108,92,231,.3);border-radius:8px;color:#6C5CE7;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">🔄 Cambiar pago</button>
+          </div>
+        </div>`;
+      });
+
+      html += `<button onclick="enviarCierreTurnoWsp()" style="width:100%;padding:13px;background:linear-gradient(135deg,#25D366,#128C7E);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;">📲 Enviar resumen por WhatsApp</button>`;
+    }
+  }
+
+  document.getElementById('tprev').innerHTML = html;
 }
 function confirmEnd(){
   const tod=orders.filter(o=>o.dt===td());
@@ -1858,6 +1915,121 @@ function endShift(){
   orders=orders.filter(o=>o.dt!==td()||(o.st==='done'));
   delete checks[td()];delete extras[td()];
   saveAll();toast('✅ Turno cerrado y guardado','green',4000);renderOrd();renderTurn();updateCobrosBadge();
+}
+
+// ── CAMBIAR MÉTODO DE PAGO ────────────────────────────────────────────────────
+function cambiarPago(orderId){
+  const o = orders.find(x=>x.id===orderId);
+  if(!o) return;
+  const opciones = [
+    {p:'e', label:'💵 Efectivo'},
+    {p:'t', label:'💳 Transferencia'},
+    {p:'f', label:'📋 Fiado'},
+  ];
+  const actual = o.p==='t'?'Transferencia':o.p==='f'?'Fiado':'Efectivo';
+  const btns = opciones.map(op=>
+    `<button onclick="setPago('${orderId}','${op.p}');closeMod('mod-cambio-pago')" style="width:100%;padding:11px;margin-bottom:8px;background:${o.p===op.p?'var(--grn)':'var(--bg)'};border:1.5px solid ${o.p===op.p?'var(--grn)':'var(--bord)'};border-radius:10px;color:${o.p===op.p?'#fff':'var(--txt)'};font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">${o.p===op.p?'✅ ':''}${op.label}</button>`
+  ).join('');
+
+  // Mostrar modal simple
+  let mod = document.getElementById('mod-cambio-pago');
+  if(!mod){
+    mod = document.createElement('div');
+    mod.id = 'mod-cambio-pago';
+    mod.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;display:flex;align-items:flex-end;justify-content:center;padding:0 0 20px 0;';
+    document.body.appendChild(mod);
+  }
+  mod.innerHTML = `<div style="background:var(--card);border-radius:18px 18px 14px 14px;padding:20px;width:100%;max-width:420px;">
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px;">🔄 Cambiar método de pago</div>
+    <div style="font-size:12px;color:var(--mut);margin-bottom:14px;">Cliente: <b>${esc(o.n)}</b> · Actual: ${actual}</div>
+    ${btns}
+    ${o.p==='t'?`<div style="margin-top:4px;">
+      <div style="font-size:11px;color:var(--mut);margin-bottom:6px;">Banco:</div>
+      ${['bancoestado','bancochile','falabella','santander'].map(b=>`
+        <button onclick="setBanco('${orderId}','${b}');renderTurn()" style="width:48%;margin:2px;padding:8px;background:${o.banco===b?'rgba(0,184,148,.1)':'var(--bg)'};border:1px solid ${o.banco===b?'var(--grn)':'var(--bord)'};border-radius:8px;font-size:10px;color:${o.banco===b?'var(--grn)':'var(--txt)'};cursor:pointer;font-family:'DM Sans',sans-serif;">${o.banco===b?'✅ ':''}${bancNombre(b)}</button>
+      `).join('')}
+    </div>`:''}
+    <button onclick="closeMod('mod-cambio-pago')" style="width:100%;padding:10px;margin-top:10px;background:none;border:1px solid var(--bord);border-radius:10px;color:var(--mut);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancelar</button>
+  </div>`;
+  mod.style.display='flex';
+}
+
+function setPago(orderId, pago){
+  const o = orders.find(x=>x.id===orderId);
+  if(!o) return;
+  o.p = pago;
+  if(pago !== 't') o.banco = '';
+  saveAll();
+  renderTurn();
+  renderCobros();
+  toast(`✅ Pago cambiado a ${pago==='t'?'Transferencia':pago==='f'?'Fiado':'Efectivo'}`,'green',2000);
+}
+
+function setBanco(orderId, banco){
+  const o = orders.find(x=>x.id===orderId);
+  if(!o) return;
+  o.banco = banco;
+  saveAll();
+  toast(`✅ Banco: ${bancNombre(banco)}`,'green',1500);
+}
+
+function closeMod(id){
+  const m = document.getElementById(id);
+  if(m) m.style.display='none';
+}
+
+// ── ENVIAR CIERRE DE TURNO POR WHATSAPP ──────────────────────────────────────
+function enviarCierreTurnoWsp(){
+  const tod = orders.filter(o=>o.dt===viewTurnDay);
+  if(!tod.length){ toast('No hay pedidos para enviar','red',2000); return; }
+
+  const done = tod.filter(o=>o.st==='done');
+  const pend = tod.filter(o=>o.st!=='done');
+  let tT=0,tE=0,tF=0,tPaid=0,tUnpaid=0;
+  done.forEach(o=>{
+    const tot=getItemTotal(o);
+    if(o.p==='t') tT+=tot;
+    else if(o.p==='f') tF+=tot;
+    else tE+=tot;
+    if(o.paid) tPaid+=tot; else tUnpaid+=tot;
+  });
+
+  const DIAS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const fecha = new Date(viewTurnDay+'T12:00');
+  const fechaLabel = `${DIAS[fecha.getDay()]} ${fecha.getDate()} de ${MESES[fecha.getMonth()]}`;
+  const hora = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+
+  let txt = `🔥 *DOS FUEGOS — Cierre de turno*\n`;
+  txt += `📅 ${fechaLabel} · ${hora}\n`;
+  txt += `━━━━━━━━━━━━━━━━━\n`;
+  txt += `📦 *RESUMEN*\n`;
+  txt += `Pedidos entregados: ${done.length}\n`;
+  if(pend.length) txt += `Pedidos pendientes: ${pend.length}\n`;
+  txt += `━━━━━━━━━━━━━━━━━\n`;
+  txt += `💰 *VENTAS*\n`;
+  if(tT>0) txt += `💳 Transferencia:  ${fm(tT)}\n`;
+  if(tE>0) txt += `💵 Efectivo:       ${fm(tE)}\n`;
+  if(tF>0) txt += `📋 Fiado:          ${fm(tF)}\n`;
+  txt += `━━━━━━━━━━━━━━━━━\n`;
+  txt += `✅ *COBRADO: ${fm(tPaid)}*\n`;
+  if(tUnpaid>0) txt += `⏳ *POR COBRAR: ${fm(tUnpaid)}*\n`;
+  txt += `💰 *TOTAL DÍA: ${fm(tT+tE+tF)}*\n`;
+  txt += `━━━━━━━━━━━━━━━━━\n`;
+  txt += `👥 *CLIENTES DEL DÍA*\n`;
+  tod.forEach((o,i)=>{
+    const tot=getItemTotal(o);
+    const pagoIcon=o.p==='t'?'💳':o.p==='f'?'📋':'💵';
+    const pagoNom=o.p==='t'?'Transferencia'+(o.banco?' · '+bancNombre(o.banco):''):o.p==='f'?'Fiado':'Efectivo';
+    const estado=o.paid?'✅':'⏳';
+    txt += `\n${i+1}. *${o.n}*\n`;
+    txt += `   🍽️ ${(o.items||[]).map(it=>`${it.qty>1?it.qty+'x ':''}${it.nombre}`).join(', ')}\n`;
+    txt += `   ${pagoIcon} ${pagoNom} · ${fm(tot)} ${estado}\n`;
+  });
+  txt += `━━━━━━━━━━━━━━━━━\n`;
+  txt += `🔥 DOS FUEGOS · @dosfuegounsabor`;
+
+  window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');
 }
 
 // ── HISTORIAL ─────────────────────────────────────────────────────────────────
