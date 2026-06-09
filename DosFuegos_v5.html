@@ -478,33 +478,34 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;disp
     <div id="fiado-list" style="padding:0 14px;"></div>
   </div>
 
-  <!-- MODAL NUEVO FIADO -->
-  <div id="modal-fiado" style="display:none;position:fixed;inset:0;background:rgba(45,52,54,.5);z-index:200;align-items:flex-end;">
-    <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:680px;margin:auto;">
-      <h3 style="font-family:'Playfair Display',serif;font-size:16px;color:var(--primary);margin-bottom:14px;">📋 Nuevo cliente con fiado</h3>
-      <div class="fg"><label>Nombre del cliente</label><input type="text" id="fiado-nombre" placeholder="Ej: José González"/></div>
-      <div class="fg"><label>Teléfono (opcional)</label><input type="text" id="fiado-tel" placeholder="+569 XXXX XXXX"/></div>
-      <div class="fg"><label>Frecuencia de pago</label>
-        <select id="fiado-freq" style="width:100%;padding:10px 12px;background:#fff;border:1.5px solid var(--bord);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;">
-          <option value="semanal">Semanal</option>
-          <option value="quincenal">Quincenal</option>
-          <option value="mensual">Mensual</option>
-        </select>
-      </div>
-      <button onclick="crearFiado()" style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;">✅ Crear cliente</button>
-      <button onclick="cerrarModalFiado()" style="width:100%;padding:11px;background:#fff;border:1.5px solid var(--bord);border-radius:12px;color:var(--mut);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;">Cancelar</button>
-    </div>
-  </div>
+</div>
 
-  <!-- MODAL ESTADO DE CUENTA -->
-  <div id="modal-estado" style="display:none;position:fixed;inset:0;background:rgba(45,52,54,.5);z-index:200;align-items:flex-end;overflow-y:auto;">
-    <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:680px;margin:auto;">
-      <h3 style="font-family:'Playfair Display',serif;font-size:16px;color:var(--primary);margin-bottom:4px;" id="estado-nombre">Estado de cuenta</h3>
-      <div id="estado-content"></div>
-      <button onclick="descargarEstado()" style="width:100%;padding:13px;background:var(--blu);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:10px;">📄 Descargar y enviar por WhatsApp</button>
-      <button onclick="saldarDeuda()" style="width:100%;padding:13px;background:var(--grn);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;">✅ Marcar como pagado</button>
-      <button onclick="cerrarModalEstado()" style="width:100%;padding:11px;background:#fff;border:1.5px solid var(--bord);border-radius:12px;color:var(--mut);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;">Cerrar</button>
+<!-- MODAL NUEVO FIADO — fuera de pg-cuentas para funcionar desde cualquier pestaña -->
+<div id="modal-fiado" style="display:none;position:fixed;inset:0;background:rgba(45,52,54,.5);z-index:400;align-items:flex-end;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:680px;margin:auto;">
+    <h3 style="font-family:'Playfair Display',serif;font-size:16px;color:var(--primary);margin-bottom:14px;">📋 Nuevo cliente con fiado</h3>
+    <div class="fg"><label>Nombre del cliente</label><input type="text" id="fiado-nombre" placeholder="Ej: José González"/></div>
+    <div class="fg"><label>Teléfono (opcional)</label><input type="text" id="fiado-tel" placeholder="+569 XXXX XXXX"/></div>
+    <div class="fg"><label>Frecuencia de pago</label>
+      <select id="fiado-freq" style="width:100%;padding:10px 12px;background:#fff;border:1.5px solid var(--bord);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;">
+        <option value="semanal">Semanal</option>
+        <option value="quincenal">Quincenal</option>
+        <option value="mensual">Mensual</option>
+      </select>
     </div>
+    <button onclick="crearFiado()" style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;">✅ Crear cliente</button>
+    <button onclick="cerrarModalFiado()" style="width:100%;padding:11px;background:#fff;border:1.5px solid var(--bord);border-radius:12px;color:var(--mut);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL ESTADO DE CUENTA — fuera de pg-cuentas -->
+<div id="modal-estado" style="display:none;position:fixed;inset:0;background:rgba(45,52,54,.5);z-index:400;align-items:flex-end;overflow-y:auto;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:680px;margin:auto;">
+    <h3 style="font-family:'Playfair Display',serif;font-size:16px;color:var(--primary);margin-bottom:4px;" id="estado-nombre">Estado de cuenta</h3>
+    <div id="estado-content"></div>
+    <button onclick="descargarEstado()" style="width:100%;padding:13px;background:var(--blu);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:10px;">📄 Descargar y enviar por WhatsApp</button>
+    <button onclick="saldarDeuda()" style="width:100%;padding:13px;background:var(--grn);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;">✅ Marcar como pagado</button>
+    <button onclick="cerrarModalEstado()" style="width:100%;padding:11px;background:#fff;border:1.5px solid var(--bord);border-radius:12px;color:var(--mut);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;">Cerrar</button>
   </div>
 </div>
 
