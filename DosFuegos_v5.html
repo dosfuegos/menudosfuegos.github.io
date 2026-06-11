@@ -718,7 +718,7 @@ Miércoles chow mein de pollo 5500..." style="width:100%;height:140px;padding:10
     </div>
     <div class="fg"><label>Notas especiales (opcional)</label><textarea id="fno" rows="2" placeholder="Ej: sin cebolla..."></textarea></div>
     <div id="order-total-prev" style="text-align:right;font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px;"></div>
-    <button class="btnp" onclick="addOrder()">✅ Agregar pedido</button>
+    <button class="btnp" onclick="try{addOrder();}catch(e){alert('ERROR: '+e.message);}">✅ Agregar pedido</button>
   </div>
 </div>
 
