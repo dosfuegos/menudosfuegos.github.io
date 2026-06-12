@@ -305,7 +305,6 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;disp
   <div class="tabs">
     <div class="tab on" onclick="filt('all',this)">Todos</div>
     <div class="tab" onclick="filt('pending',this)">Pendientes</div>
-    <div class="tab" onclick="filt('prep',this)">En prep.</div>
     <div class="tab" onclick="filt('done',this)">Entregados</div>
     <div class="tab" onclick="filt('resumen',this)">📋 Resumen</div>
   </div>
@@ -527,6 +526,13 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;disp
     <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importData(this)"/>
     <p id="backup-status" style="font-size:10px;color:var(--mut);margin-top:8px;text-align:center;"></p>
   </div>
+
+  <div class="backup-box" style="border-color:rgba(253,203,110,.4);">
+    <h3 style="color:#e17055;">📅 Publicador semanal de menú</h3>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:10px;line-height:1.5;">Sube la imagen de cada día y publícala cuando quieras en GitHub Pages.</p>
+    <div id="pub-semanal-grid"></div>
+  </div>
+
   <div class="backup-box" style="border-color:rgba(0,184,148,.2);">
     <h3 style="color:var(--grn);">🌐 Generador de página del menú</h3>
     <p style="font-size:11px;color:var(--mut);margin-bottom:12px;line-height:1.5;">Sube tu imagen del menú del día, toca generar y descarga el archivo listo para GitHub Pages.</p>
@@ -1082,9 +1088,9 @@ function renderBoleta(){
     <div style="font-size:11px;color:var(--mut);margin-bottom:8px;">Toca un banco para seleccionarlo en la boleta:</div>
     ${[
       {key:'bancoestado', icon:'🟩', nombre:'BancoEstado CuentaRUT', titular:'Manuel Alejandro Arias Cornejo', rut:'26.083.389-8', cuenta:'26083389', email:''},
-      {key:'bancochile',  icon:'🟨', nombre:'Banco de Chile Cuenta Vista', titular:'Manuel Arias', rut:'', cuenta:'00-022-30211-02', email:'manuelarias_260@hotmail.com'},
-      {key:'falabella',   icon:'🟦', nombre:'Banco Falabella Cta. Corriente', titular:'Manuel Alejandro Arias', rut:'', cuenta:'1-999-057109-8', email:'manuelarias_260@hotmail.com'},
-      {key:'santander',   icon:'🟥', nombre:'Banco Santander Cta. Corriente', titular:'Manuel Alejandro Arias Cornejo', rut:'', cuenta:'0-000-80-17947-2', email:'manuelarias_260@hotmail.com'},
+      {key:'bancochile',  icon:'🟨', nombre:'Banco de Chile Cuenta Vista', titular:'Manuel Arias', rut:'26.083.389-8', cuenta:'00-022-30211-02', email:'manuelarias_260@hotmail.com'},
+      {key:'falabella',   icon:'🟦', nombre:'Banco Falabella Cta. Corriente', titular:'Manuel Alejandro Arias', rut:'26.083.389-8', cuenta:'1-999-057109-8', email:'manuelarias_260@hotmail.com'},
+      {key:'santander',   icon:'🟥', nombre:'Banco Santander Cta. Corriente', titular:'Manuel Alejandro Arias Cornejo', rut:'26.083.389-8', cuenta:'0-000-80-17947-2', email:'manuelarias_260@hotmail.com'},
     ].map(b=>{
       const sel = bancoSel === b.key;
       return `
@@ -1170,9 +1176,9 @@ function getBoletaTexto(){
   if(bancoSel && o.p==='t'){
     const bancos = {
       bancoestado: `\n\n💳 *Datos de transferencia:*\nBancoEstado CuentaRUT\nManuel Alejandro Arias Cornejo\nRUT: 26.083.389-8\nN° 26083389`,
-      bancochile:  `\n\n💳 *Datos de transferencia:*\nBanco de Chile Cuenta Vista\nManuel Arias\nN° 00-022-30211-02\nmanuelarias_260@hotmail.com`,
-      falabella:   `\n\n💳 *Datos de transferencia:*\nBanco Falabella Cta. Corriente\nManuel Alejandro Arias\nN° 1-999-057109-8\nmanuelarias_260@hotmail.com`,
-      santander:   `\n\n💳 *Datos de transferencia:*\nBanco Santander Cta. Corriente\nManuel Alejandro Arias Cornejo\nN° 0-000-80-17947-2\nmanuelarias_260@hotmail.com`,
+      bancochile:  `\n\n💳 *Datos de transferencia:*\nBanco de Chile Cuenta Vista\nManuel Arias\nRUT: 26.083.389-8\nN° 00-022-30211-02\nmanuelarias_260@hotmail.com`,
+      falabella:   `\n\n💳 *Datos de transferencia:*\nBanco Falabella Cta. Corriente\nManuel Alejandro Arias\nRUT: 26.083.389-8\nN° 1-999-057109-8\nmanuelarias_260@hotmail.com`,
+      santander:   `\n\n💳 *Datos de transferencia:*\nBanco Santander Cta. Corriente\nManuel Alejandro Arias Cornejo\nRUT: 26.083.389-8\nN° 0-000-80-17947-2\nmanuelarias_260@hotmail.com`,
     };
     if(bancos[bancoSel]) txt += bancos[bancoSel];
   }
@@ -1373,8 +1379,8 @@ function renderOrd(){
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
           <div class="tl2">${fm(tot)}</div>
           <div class="sbtns">
-            <button class="bs bpr ${o.st==='prep'?'on':''}" onclick="setSt('${o.id}','prep')">🔥 Prep</button>
-            <button class="bs bdo ${isDone?'on':''}" onclick="setSt('${o.id}','done')">📦 ${isDone?'Entregado':'Entregar'}</button>
+            <button class="bs bdo ${isDone?'on':''}" onclick="enCamino('${o.id}')">🛵 En camino</button>
+            <button class="bs bdo ${isDone?'on':''}" onclick="marcarEntregado('${o.id}')">✅ ${isDone?'Entregado':'Entregar'}</button>
             <button class="bs bpag ${o.paid?'on':''}" onclick="togglePaid('${o.id}')">${o.paid?'💰 Pagado':'⏳ Cobrar'}</button>
             <button class="bs" style="background:rgba(52,152,219,.1);color:#2980b9;border-color:rgba(52,152,219,.3);" onclick="verBoleta('${o.id}')">🧾</button>
             <button class="bs bdl" onclick="askDel('${o.id}')">🗑</button>
@@ -1406,6 +1412,26 @@ function updateCobrosBadge(){
 function setSt(id,st){
   const o=orders.find(x=>x.id===id);if(!o)return;
   o.st=o.st===st?'pending':st;saveAll();renderOrd();updateCobrosBadge();
+}
+
+function enCamino(id){
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  const platos = (o.items||[]).map(it=>`• ${it.qty>1?it.qty+'x ':''}${it.nombre}`).join('\n');
+  const msg = `Hola ${o.n} 👋\n\nYa tu pedido va en camino 🛵🔥\n\n${platos}\n\nEn breve lo recibirás 😊\n\n_Dos Fuegos, Un Sabor_ 🔥`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+function marcarEntregado(id){
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  // Marcar como entregado
+  o.st = o.st==='done' ? 'pending' : 'done';
+  saveAll();renderOrd();updateCobrosBadge();
+  // Si se marcó como entregado, abrir WhatsApp con mensaje + encuesta
+  if(o.st==='done'){
+    const platos = (o.items||[]).map(it=>`• ${it.qty>1?it.qty+'x ':''}${it.nombre}`).join('\n');
+    const msg = `Hola ${o.n} 👋\n\nTu pedido fue entregado con éxito 🔥\n\n${platos}\n\nDesde *Dos Fuegos* nos importa mucho tu opinión 🙏\n¿Cómo estuvo tu experiencia hoy? Tu feedback nos ayuda a mejorar cada día ⭐\n\n_Dos Fuegos, Un Sabor_ 🔥`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+  }
 }
 function togglePaid(id){
   const o=orders.find(x=>x.id===id);if(!o)return;
@@ -2459,6 +2485,77 @@ function renderCfg(){
   document.getElementById('data-hist').textContent=history.length;
   document.getElementById('data-platos').textContent=platoDB.length;
   renderSemanaSelector();
+  renderPubSemanal();
+}
+
+// Almacenamiento temporal de imágenes por día
+const pubSemanalImgs = {};
+
+function renderPubSemanal(){
+  const grid = document.getElementById('pub-semanal-grid');
+  if(!grid) return;
+  const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  const semana = getWeek();
+  let html = '';
+  dias.forEach((dia, i) => {
+    const fecha = semana[i];
+    const [y,m,d] = fecha.split('-');
+    const fechaLabel = `${dia} ${parseInt(d)}/${parseInt(m)}`;
+    const tieneImg = !!pubSemanalImgs[fecha];
+    html += `<div style="background:var(--bg);border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid var(--bord);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:12px;font-weight:700;color:var(--txt);">📅 ${fechaLabel}</span>
+        ${tieneImg ? `<span style="font-size:10px;color:var(--grn);font-weight:700;">✅ Lista</span>` : `<span style="font-size:10px;color:var(--mut);">Sin imagen</span>`}
+      </div>
+      ${tieneImg ? `<img src="${pubSemanalImgs[fecha]}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:6px;">` : ''}
+      <div style="display:flex;gap:6px;">
+        <button onclick="document.getElementById('pub-img-${fecha}').click()" style="flex:1;padding:7px;background:var(--bg);border:1.5px solid var(--bord);border-radius:8px;font-size:11px;color:var(--txt);cursor:pointer;font-family:'DM Sans',sans-serif;">
+          📸 ${tieneImg ? 'Cambiar' : 'Subir imagen'}
+        </button>
+        ${tieneImg ? `<button onclick="publicarDiaSemanal('${fecha}')" style="flex:1;padding:7px;background:linear-gradient(135deg,var(--grn),var(--grn2));border:none;border-radius:8px;font-size:11px;color:#fff;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">📤 Publicar</button>` : ''}
+      </div>
+      <input type="file" id="pub-img-${fecha}" accept="image/*" style="display:none" onchange="cargarImgSemanal('${fecha}',this)">
+    </div>`;
+  });
+  grid.innerHTML = html;
+}
+
+function cargarImgSemanal(fecha, input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    pubSemanalImgs[fecha] = e.target.result;
+    renderPubSemanal();
+    toast('✅ Imagen cargada — toca Publicar cuando quieras','green',3000);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function publicarDiaSemanal(fecha){
+  const imgData = pubSemanalImgs[fecha];
+  if(!imgData){ toast('⚠️ No hay imagen para este día','red',2000); return; }
+  const [y,m,d] = fecha.split('-');
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const dt = new Date(fecha+'T12:00');
+  const diaLabel = dias[dt.getDay()];
+  const meses = ['','enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const label = `${diaLabel} ${parseInt(d)} de ${meses[parseInt(m)]}`;
+  toast('⏳ Publicando...','gold',3000);
+  try {
+    const base64 = imgData.split(',')[1];
+    const ext = imgData.includes('png') ? 'png' : 'jpg';
+    const fileName = 'menu-del-dia.' + ext;
+    // Subir imagen
+    await uploadFile(fileName, base64, `Menú del día ${label}`);
+    // Actualizar index.html
+    const indexContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Menú Dos Fuegos - ${label}</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;}img{max-width:100%;max-height:90vh;object-fit:contain;}p{color:#fff;margin-top:10px;font-size:12px;opacity:.6;}</style></head><body><img src="${fileName}" alt="Menú ${label}"><p>Dos Fuegos · @dosfuegounsabor · WhatsApp +569 4104 8327</p></body></html>`;
+    const indexB64 = btoa(unescape(encodeURIComponent(indexContent)));
+    await uploadFile('index.html', indexB64, `Menú publicado: ${label}`);
+    toast(`✅ Menú del ${label} publicado`,'green',4000);
+  } catch(e) {
+    toast('❌ Error al publicar: '+e.message,'red',4000);
+  }
 }
 function manualRepair(){
   repairOldOrders();
