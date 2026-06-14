@@ -533,6 +533,18 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;disp
     <div id="pub-semanal-grid"></div>
   </div>
 
+  <div class="backup-box" style="border-color:rgba(108,92,231,.2);">
+    <h3 style="color:#6C5CE7;">📷 Código QR del menú</h3>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:12px;line-height:1.5;">Escanea o descarga este QR para poner en tus flyers. Siempre muestra el menú del día que publicas.</p>
+    <div id="qr-canvas-box" style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+      <canvas id="qr-canvas" width="200" height="200" style="border-radius:12px;border:3px solid #6C5CE7;"></canvas>
+      <p style="font-size:10px;color:var(--mut);text-align:center;">dosfuegos.github.io/menudosfuegos.github.io</p>
+      <button onclick="descargarQR()" style="width:100%;padding:11px;background:linear-gradient(135deg,#6C5CE7,#a29bfe);border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        💾 Descargar QR
+      </button>
+    </div>
+  </div>
+
   <div class="backup-box" style="border-color:rgba(0,184,148,.2);">
     <h3 style="color:var(--grn);">🌐 Generador de página del menú</h3>
     <p style="font-size:11px;color:var(--mut);margin-bottom:12px;line-height:1.5;">Sube tu imagen del menú del día, toca generar y descarga el archivo listo para GitHub Pages.</p>
@@ -2499,10 +2511,49 @@ function renderCfg(){
   document.getElementById('data-platos').textContent=platoDB.length;
   renderSemanaSelector();
   renderPubSemanal();
+  setTimeout(generarQR, 300);
 }
 
 // Almacenamiento temporal de imágenes por día
 const pubSemanalImgs = {};
+
+function generarQR(){
+  const url = 'https://dosfuegos.github.io/menudosfuegos.github.io/';
+  const canvas = document.getElementById('qr-canvas');
+  if(!canvas) return;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = function(){
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,200,200);
+    ctx.drawImage(img,10,10,180,180);
+  };
+  img.onerror = function(){
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0,0,200,200);
+    ctx.fillStyle = '#6C5CE7';
+    ctx.font = 'bold 13px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🔥 DOS FUEGOS', 100, 85);
+    ctx.font = '9px Arial';
+    ctx.fillStyle = '#555';
+    ctx.fillText('Escanea para ver el menú', 100, 108);
+    ctx.fillText('dosfuegos.github.io', 100, 124);
+  };
+  img.src = `https://chart.googleapis.com/chart?chs=180x180&cht=qr&chl=${encodeURIComponent(url)}&choe=UTF-8&chld=H|1`;
+}
+
+function descargarQR(){
+  const canvas = document.getElementById('qr-canvas');
+  if(!canvas){ toast('⚠️ Ve a Config para generar el QR','gold',2000); return; }
+  const link = document.createElement('a');
+  link.download = 'QR_DosFuegos.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  toast('✅ QR descargado','green',2000);
+}
 
 function renderPubSemanal(){
   const grid = document.getElementById('pub-semanal-grid');
