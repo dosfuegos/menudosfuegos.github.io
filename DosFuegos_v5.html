@@ -781,6 +781,7 @@ let history = ld('df3_hist')  || [];
 let checks  = ld('df3_chk')   || {};
 let extras  = ld('df3_ext')   || {};
 let alerts  = new Set(ld('df3_alrt')||[]);
+let fiados  = lp('df3_fiados') || [];
 let delMd='u', payMd='t', pendFn=null;
 let editDay=null, menuRows=[], platoLines=[];
 let viewDay=null; // día actualmente visible en comandas
@@ -3032,7 +3033,6 @@ function instalarPWA(){
 }
 
 // ── CUENTAS Y FIADO ──────────────────────────────────────────────────────────
-let fiados = lp('df3_fiados') || [];
 let fiadoActual = null;
 
 function saveFiados(){ sv('df3_fiados', fiados); saveToFirebase(); }
