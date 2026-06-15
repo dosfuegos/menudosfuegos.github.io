@@ -940,74 +940,43 @@ function loadFromFirebase(){
       // Estas fechas se fuerzan aunque Firebase ya tenga datos (semanas nuevas)
       const FORCE_AFTER_FIREBASE = [
         '2026-06-08','2026-06-09','2026-06-10','2026-06-11',
-        '2026-06-12','2026-06-13','2026-06-14'
+        '2026-06-12','2026-06-13','2026-06-14',
+        '2026-06-15','2026-06-16','2026-06-17','2026-06-18',
+        '2026-06-19','2026-06-20','2026-06-21'
       ];
+
+      const cartaFija = [
+        {nombre:'Milanesa de Pollo Napolitana con Papas Rústicas Salteadas',precio:5500,ings:[]},
+        {nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},
+        {nombre:'Combo Asiático (Arroz Frito + 2 Lumpias + Pollo Agridulce a la Naranja)',precio:9990,ings:[]},
+        {nombre:'Chow Mein de Pollo',precio:5500,ings:[]},
+        {nombre:'Chow Mein de Camarón',precio:7500,ings:[]},
+        {nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},
+        {nombre:'Combo Kai',precio:9990,ings:[]},
+        {nombre:'Combo Kyu',precio:9990,ings:[]},
+        {nombre:'Combo Dos Fuegos',precio:15990,ings:[]}
+      ];
+      const empanadas = [
+        {nombre:'Empanada de Pollo',precio:3500,ings:[]},
+        {nombre:'Empanada Mechada',precio:3500,ings:[]},
+        {nombre:'Empanada Jamón Queso',precio:3500,ings:[]}
+      ];
+
       const MENU_FORZADO = {
-        '2026-06-08': [
-          {nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},
-          {nombre:'Combo Asiático',precio:9990,ings:[]},
-          {nombre:'Chow Mein de Pollo',precio:5500,ings:[]},
-          {nombre:'Chow Mein de Camarón',precio:7500,ings:[]},
-          {nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},
-          {nombre:'Combo Kai',precio:9990,ings:[]},
-          {nombre:'Combo Kyu',precio:9990,ings:[]},
-          {nombre:'Combo Dos Fuegos',precio:15990,ings:[]}
-        ],
-        '2026-06-09': [
-          {nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},
-          {nombre:'Combo Asiático',precio:9990,ings:[]},
-          {nombre:'Chow Mein de Pollo',precio:5500,ings:[]},
-          {nombre:'Chow Mein de Camarón',precio:7500,ings:[]},
-          {nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},
-          {nombre:'Combo Kai',precio:9990,ings:[]},
-          {nombre:'Combo Kyu',precio:9990,ings:[]},
-          {nombre:'Combo Dos Fuegos',precio:15990,ings:[]}
-        ],
-        '2026-06-10': [
-          {nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},
-          {nombre:'Combo Asiático',precio:9990,ings:[]},
-          {nombre:'Chow Mein de Pollo',precio:5500,ings:[]},
-          {nombre:'Chow Mein de Camarón',precio:7500,ings:[]},
-          {nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},
-          {nombre:'Combo Kai',precio:9990,ings:[]},
-          {nombre:'Combo Kyu',precio:9990,ings:[]},
-          {nombre:'Combo Dos Fuegos',precio:15990,ings:[]}
-        ],
-        '2026-06-11': [
-          {nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},
-          {nombre:'Combo Asiático',precio:9990,ings:[]},
-          {nombre:'Chow Mein de Pollo',precio:5500,ings:[]},
-          {nombre:'Chow Mein de Camarón',precio:7500,ings:[]},
-          {nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},
-          {nombre:'Combo Kai',precio:9990,ings:[]},
-          {nombre:'Combo Kyu',precio:9990,ings:[]},
-          {nombre:'Combo Dos Fuegos',precio:15990,ings:[]}
-        ],
-        '2026-06-12': [
-          {nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},
-          {nombre:'Combo Asiático',precio:9990,ings:[]},
-          {nombre:'Chow Mein de Pollo',precio:5500,ings:[]},
-          {nombre:'Chow Mein de Camarón',precio:7500,ings:[]},
-          {nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},
-          {nombre:'Combo Kai',precio:9990,ings:[]},
-          {nombre:'Combo Kyu',precio:9990,ings:[]},
-          {nombre:'Combo Dos Fuegos',precio:15990,ings:[]}
-        ],
-        '2026-06-13': [
-          {nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},
-          {nombre:'Combo Asiático',precio:9990,ings:[]},
-          {nombre:'Chow Mein de Pollo',precio:5500,ings:[]},
-          {nombre:'Chow Mein de Camarón',precio:7500,ings:[]},
-          {nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},
-          {nombre:'Combo Kai',precio:9990,ings:[]},
-          {nombre:'Combo Kyu',precio:9990,ings:[]},
-          {nombre:'Combo Dos Fuegos',precio:15990,ings:[]}
-        ],
-        '2026-06-14': [
-          {nombre:'Empanada de Pollo',precio:3500,ings:[]},
-          {nombre:'Empanada Mechada',precio:3500,ings:[]},
-          {nombre:'Empanada Jamón Queso',precio:3500,ings:[]}
-        ]
+        '2026-06-08': [{nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},{nombre:'Combo Asiático',precio:9990,ings:[]},{nombre:'Chow Mein de Pollo',precio:5500,ings:[]},{nombre:'Chow Mein de Camarón',precio:7500,ings:[]},{nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},{nombre:'Combo Kai',precio:9990,ings:[]},{nombre:'Combo Kyu',precio:9990,ings:[]},{nombre:'Combo Dos Fuegos',precio:15990,ings:[]}],
+        '2026-06-09': [{nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},{nombre:'Combo Asiático',precio:9990,ings:[]},{nombre:'Chow Mein de Pollo',precio:5500,ings:[]},{nombre:'Chow Mein de Camarón',precio:7500,ings:[]},{nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},{nombre:'Combo Kai',precio:9990,ings:[]},{nombre:'Combo Kyu',precio:9990,ings:[]},{nombre:'Combo Dos Fuegos',precio:15990,ings:[]}],
+        '2026-06-10': [{nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},{nombre:'Combo Asiático',precio:9990,ings:[]},{nombre:'Chow Mein de Pollo',precio:5500,ings:[]},{nombre:'Chow Mein de Camarón',precio:7500,ings:[]},{nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},{nombre:'Combo Kai',precio:9990,ings:[]},{nombre:'Combo Kyu',precio:9990,ings:[]},{nombre:'Combo Dos Fuegos',precio:15990,ings:[]}],
+        '2026-06-11': [{nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},{nombre:'Combo Asiático',precio:9990,ings:[]},{nombre:'Chow Mein de Pollo',precio:5500,ings:[]},{nombre:'Chow Mein de Camarón',precio:7500,ings:[]},{nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},{nombre:'Combo Kai',precio:9990,ings:[]},{nombre:'Combo Kyu',precio:9990,ings:[]},{nombre:'Combo Dos Fuegos',precio:15990,ings:[]}],
+        '2026-06-12': [{nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},{nombre:'Combo Asiático',precio:9990,ings:[]},{nombre:'Chow Mein de Pollo',precio:5500,ings:[]},{nombre:'Chow Mein de Camarón',precio:7500,ings:[]},{nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},{nombre:'Combo Kai',precio:9990,ings:[]},{nombre:'Combo Kyu',precio:9990,ings:[]},{nombre:'Combo Dos Fuegos',precio:15990,ings:[]}],
+        '2026-06-13': [{nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},{nombre:'Combo Asiático',precio:9990,ings:[]},{nombre:'Chow Mein de Pollo',precio:5500,ings:[]},{nombre:'Chow Mein de Camarón',precio:7500,ings:[]},{nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},{nombre:'Combo Kai',precio:9990,ings:[]},{nombre:'Combo Kyu',precio:9990,ings:[]},{nombre:'Combo Dos Fuegos',precio:15990,ings:[]}],
+        '2026-06-14': [{nombre:'Empanada de Pollo',precio:3500,ings:[]},{nombre:'Empanada Mechada',precio:3500,ings:[]},{nombre:'Empanada Jamón Queso',precio:3500,ings:[]}],
+        '2026-06-15': cartaFija,
+        '2026-06-16': cartaFija,
+        '2026-06-17': cartaFija,
+        '2026-06-18': cartaFija,
+        '2026-06-19': cartaFija,
+        '2026-06-20': cartaFija,
+        '2026-06-21': empanadas
       };
       let menuForzado = false;
       FORCE_AFTER_FIREBASE.forEach(date => {
@@ -2473,8 +2442,9 @@ function forzarMenuSemana(){
   if(st) st.innerHTML = '⏳ Cargando...';
 
   const cartaFija = [
+    {nombre:'Milanesa de Pollo Napolitana con Papas Rústicas Salteadas',precio:5500,ings:[]},
     {nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},
-    {nombre:'Combo Asiático',precio:9990,ings:[]},
+    {nombre:'Combo Asiático (Arroz Frito + 2 Lumpias + Pollo Agridulce a la Naranja)',precio:9990,ings:[]},
     {nombre:'Chow Mein de Pollo',precio:5500,ings:[]},
     {nombre:'Chow Mein de Camarón',precio:7500,ings:[]},
     {nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},
@@ -2488,14 +2458,13 @@ function forzarMenuSemana(){
     {nombre:'Empanada Jamón Queso',precio:3500,ings:[]}
   ];
 
-  const MENU = {
-    '2026-06-08': cartaFija, '2026-06-09': cartaFija,
-    '2026-06-10': cartaFija, '2026-06-11': cartaFija,
-    '2026-06-12': cartaFija, '2026-06-13': cartaFija,
-    '2026-06-14': empanadas
-  };
+  const semana = getWeek();
+  const dias = ['lunes','martes','miercoles','jueves','viernes','sabado'];
+  semana.forEach((fecha, i) => {
+    if(i < 6) menuDB[fecha] = cartaFija;
+    else menuDB[fecha] = empanadas;
+  });
 
-  Object.entries(MENU).forEach(([date, platos]) => { menuDB[date] = platos; });
   saveAll();
   if(st) st.innerHTML = '✅ ¡Menú cargado! Ve a la pestaña Menú.';
   toast('✅ Menú semana cargado','green',4000);
