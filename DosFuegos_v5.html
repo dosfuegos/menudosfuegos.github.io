@@ -2490,46 +2490,36 @@ function generarQR(){
   const url = 'https://dosfuegos.github.io/menudosfuegos.github.io/';
   const canvas = document.getElementById('qr-canvas');
   if(!canvas) return;
-
-  if(typeof QRCode !== 'undefined'){
-    // Limpiar canvas
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0,0,200,200);
-    // Crear div temporal para QRCode.js
-    const tmp = document.createElement('div');
-    tmp.style.display = 'none';
-    document.body.appendChild(tmp);
-    new QRCode(tmp, {
-      text: url, width: 180, height: 180,
-      colorDark: '#1A1A1A', colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.H
-    });
-    setTimeout(()=>{
-      const img = tmp.querySelector('img') || tmp.querySelector('canvas');
-      if(img){
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(0,0,200,200);
-        ctx.drawImage(img, 10, 10, 180, 180);
-      }
-      document.body.removeChild(tmp);
-    }, 300);
-  } else {
-    // Cargar librería dinámicamente
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-    script.onload = () => generarQR();
-    script.onerror = () => {
-      // Fallback visual si no hay internet
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,200,200);
-      ctx.fillStyle = '#6C5CE7'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
-      ctx.fillText('🔥 DOS FUEGOS', 100, 80);
-      ctx.font = '10px Arial'; ctx.fillStyle = '#555';
-      ctx.fillText('Necesitas internet para', 100, 105);
-      ctx.fillText('generar el QR', 100, 120);
-    };
-    document.head.appendChild(script);
-  }
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#f8f9fa';
+  ctx.fillRect(0,0,200,200);
+  ctx.fillStyle = '#aaa';
+  ctx.font = '11px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Generando QR...', 100, 105);
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = function(){
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,200,200);
+    ctx.drawImage(img, 10, 10, 180, 180);
+  };
+  img.onerror = function(){
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0,0,200,200);
+    ctx.fillStyle = '#6C5CE7';
+    ctx.font = 'bold 13px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🔥 DOS FUEGOS', 100, 75);
+    ctx.font = '9px Arial';
+    ctx.fillStyle = '#333';
+    ctx.fillText('dosfuegos.github.io/', 100, 100);
+    ctx.fillText('menudosfuegos.github.io', 100, 115);
+    ctx.font = '8px Arial';
+    ctx.fillStyle = '#888';
+    ctx.fillText('(Necesitas internet para ver el QR)', 100, 140);
+  };
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(url) + '&format=png&qzone=1&color=1A1A1A';
 }
 
 function descargarQR(){
