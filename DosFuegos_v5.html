@@ -627,6 +627,9 @@ Miércoles chow mein de pollo 5500..." style="width:100%;height:140px;padding:10
     <button onclick="forzarMenuSemana()" style="width:100%;padding:12px;background:rgba(253,203,110,.15);border:1.5px solid rgba(253,203,110,.5);border-radius:12px;color:#e17055;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;" id="btn-forzar-menu">
       📅 Cargar menú semana actual
     </button>
+    <button onclick="cargar3MesesMenu()" style="width:100%;padding:12px;margin-top:8px;background:rgba(0,184,148,.1);border:1.5px solid rgba(0,184,148,.4);border-radius:12px;color:var(--grn);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+      🗓️ Cargar carta fija para 3 meses
+    </button>
     <p id="menu-forzar-status" style="font-size:10px;color:var(--mut);margin-top:8px;text-align:center;"></p>
   </div>
 
@@ -2438,29 +2441,38 @@ function confirmarMenuIA(){
 }
 
 // ── FORZAR MENÚ SEMANA DIRECTAMENTE EN FIREBASE ──────────────────────────────
-function forzarMenuSemana(){
-  const st = document.getElementById('menu-forzar-status');
-  if(st) st.innerHTML = '⏳ Cargando...';
-
-  const cartaFija = [
+function getCartaFijaActual(){
+  return [
     {nombre:'Milanesa de Pollo Napolitana con Papas Rústicas Salteadas',precio:5500,ings:[]},
     {nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},
     {nombre:'Combo Asiático (Arroz Frito + 2 Lumpias + Pollo Agridulce a la Naranja)',precio:9990,ings:[]},
     {nombre:'Chow Mein de Pollo',precio:5500,ings:[]},
+    {nombre:'Chow Mein de Vacuno',precio:7500,ings:[]},
     {nombre:'Chow Mein de Camarón',precio:7500,ings:[]},
+    {nombre:'Chow Mein 3 Sabores',precio:9990,ings:[]},
     {nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},
     {nombre:'Combo Kai',precio:9990,ings:[]},
     {nombre:'Combo Kyu',precio:9990,ings:[]},
-    {nombre:'Combo Dos Fuegos',precio:15990,ings:[]}
+    {nombre:'Combo Dos Fuegos',precio:15990,ings:[]},
+    {nombre:'Combo Mitsu',precio:18990,ings:[]}
   ];
-  const empanadas = [
+}
+function getEmpanadasActual(){
+  return [
     {nombre:'Empanada de Pollo',precio:3500,ings:[]},
     {nombre:'Empanada Mechada',precio:3500,ings:[]},
     {nombre:'Empanada Jamón Queso',precio:3500,ings:[]}
   ];
+}
+
+function forzarMenuSemana(){
+  const st = document.getElementById('menu-forzar-status');
+  if(st) st.innerHTML = '⏳ Cargando...';
+
+  const cartaFija = getCartaFijaActual();
+  const empanadas = getEmpanadasActual();
 
   const semana = getWeek();
-  const dias = ['lunes','martes','miercoles','jueves','viernes','sabado'];
   semana.forEach((fecha, i) => {
     if(i < 6) menuDB[fecha] = cartaFija;
     else menuDB[fecha] = empanadas;
@@ -2469,6 +2481,35 @@ function forzarMenuSemana(){
   saveAll();
   if(st) st.innerHTML = '✅ ¡Menú cargado! Ve a la pestaña Menú.';
   toast('✅ Menú semana cargado','green',4000);
+  setTimeout(()=>{ gp('menu',null); }, 1500);
+}
+
+function cargar3MesesMenu(){
+  const st = document.getElementById('menu-forzar-status');
+  if(st) st.innerHTML = '⏳ Cargando 3 meses...';
+
+  const cartaFija = getCartaFijaActual();
+  const empanadas = getEmpanadasActual();
+
+  const hoy = new Date();
+  const dow = hoy.getDay();
+  const lunes = new Date(hoy);
+  lunes.setDate(hoy.getDate() - (dow===0?6:dow-1));
+
+  let totalDias = 0;
+  for(let semanaIdx=0; semanaIdx<13; semanaIdx++){
+    for(let dia=0; dia<7; dia++){
+      const fecha = new Date(lunes);
+      fecha.setDate(lunes.getDate() + (semanaIdx*7) + dia);
+      const fechaStr = fd(fecha);
+      menuDB[fechaStr] = (dia < 6) ? cartaFija : empanadas;
+      totalDias++;
+    }
+  }
+
+  saveAll();
+  if(st) st.innerHTML = `✅ ¡${totalDias} días cargados (≈3 meses)!`;
+  toast(`✅ Menú cargado para 3 meses (${totalDias} días)`,'green',4000);
   setTimeout(()=>{ gp('menu',null); }, 1500);
 }
 
