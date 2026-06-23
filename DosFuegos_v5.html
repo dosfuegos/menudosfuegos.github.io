@@ -687,7 +687,10 @@ Miércoles chow mein de pollo 5500..." style="width:100%;height:140px;padding:10
 <div class="mov" id="mov-ord" onclick="cmo(event)">
   <div class="mo">
     <div class="mh"></div>
-    <h2>🍱 Nuevo Pedido</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+      <h2 style="margin-bottom:0;">🍱 Nuevo Pedido</h2>
+      <button onclick="cancelarNuevoPedido()" type="button" style="background:none;border:1.5px solid var(--bord);border-radius:8px;color:var(--mut);font-size:12px;font-weight:700;padding:6px 11px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕ Cancelar</button>
+    </div>
     <div class="fg"><label>Nombre del cliente</label>
       <div style="position:relative;">
         <div style="display:flex;gap:6px;align-items:center;">
@@ -1396,6 +1399,7 @@ function renderOrd(){
             <button class="bs bdo ${isDone?'on':''}" onclick="marcarEntregado('${o.id}')">✅ ${isDone?'Entregado':'Entregar'}</button>
             <button class="bs bpag ${o.paid?'on':''}" onclick="togglePaid('${o.id}')">${o.paid?'💰 Pagado':'⏳ Cobrar'}</button>
             <button class="bs" style="background:rgba(52,152,219,.1);color:#2980b9;border-color:rgba(52,152,219,.3);" onclick="verBoleta('${o.id}')">🧾</button>
+            <button class="bs" style="background:rgba(108,92,231,.1);color:#6C5CE7;border-color:rgba(108,92,231,.3);" onclick="abrirEditarPedido('${o.id}')">✏️ Editar</button>
             <button class="bs bdl" onclick="askDel('${o.id}')">🗑</button>
           </div>
         </div>
@@ -1451,6 +1455,113 @@ function togglePaid(id){
   o.paid=!o.paid;saveAll();renderOrd();updateCobrosBadge();
   toast(o.paid?'💰 Marcado como pagado':'⏳ Sin cobrar',o.paid?'green':'red',2000);
 }
+
+// ── EDITAR PEDIDO (agregar / quitar / cambiar cantidad de platos) ────────────
+let editPedidoId=null, editPedidoItems=[];
+
+function abrirEditarPedido(id){
+  const o=orders.find(x=>x.id===id);
+  if(!o) return;
+  editPedidoId=id;
+  // Copia de trabajo: no toca el pedido real hasta que se guarde
+  editPedidoItems=(o.items||[]).map(it=>({pi:it.pi,nombre:it.nombre,precio:it.precio!=null?it.precio:0,qty:it.qty||1}));
+  let mod=document.getElementById('mod-editar-pedido');
+  if(!mod){
+    mod=document.createElement('div');
+    mod.id='mod-editar-pedido';
+    mod.style.cssText='position:fixed;inset:0;background:rgba(45,52,54,.55);z-index:600;display:flex;align-items:flex-end;justify-content:center;';
+    mod.onclick=function(e){ if(e.target===mod) cerrarEditarPedido(); };
+    document.body.appendChild(mod);
+  }
+  renderEditarPedido();
+  mod.style.display='flex';
+}
+
+function cerrarEditarPedido(){
+  const mod=document.getElementById('mod-editar-pedido');
+  if(mod) mod.style.display='none';
+  editPedidoId=null;editPedidoItems=[];
+}
+
+function renderEditarPedido(){
+  const mod=document.getElementById('mod-editar-pedido');
+  if(!mod) return;
+  const o=orders.find(x=>x.id===editPedidoId);
+  if(!o){ cerrarEditarPedido(); return; }
+  const tm=menuDB[o.dt]||[];
+  const total=editPedidoItems.reduce((s,it)=>s+(it.precio*it.qty),0)+(o.dm==='u'?1000:(Number(o.dc)||0));
+
+  const filas=editPedidoItems.map((it,i)=>`
+    <div class="plato-line" style="align-items:center;">
+      <div style="flex:1;font-size:12px;">${esc(it.nombre||'Plato')}<div style="font-size:10px;color:var(--mut);">${fm(it.precio)} c/u</div></div>
+      <button onclick="editPedidoQty(${i},-1)" style="background:var(--bg);border:1px solid var(--bord);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;">−</button>
+      <input type="number" min="1" value="${it.qty}" oninput="editPedidoSetQty(${i},this.value)" style="width:46px;text-align:center;"/>
+      <button onclick="editPedidoQty(${i},1)" style="background:var(--bg);border:1px solid var(--bord);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;">+</button>
+      <button class="pl-rm" onclick="editPedidoRemove(${i})">🗑</button>
+    </div>`).join('') || '<p style="font-size:12px;color:var(--mut);text-align:center;padding:10px 0;">Sin platos — agrega uno abajo</p>';
+
+  const opciones=tm.map((p,i)=>`<option value="${i}">${esc(p.nombre)} — ${fm(p.precio)}</option>`).join('');
+
+  mod.innerHTML=`<div style="background:var(--card);border-radius:18px 18px 0 0;padding:20px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;" onclick="event.stopPropagation()">
+    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 14px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <h2 style="margin-bottom:0;">✏️ Editar pedido</h2>
+      <button onclick="cerrarEditarPedido()" type="button" style="background:none;border:1.5px solid var(--bord);border-radius:8px;color:var(--mut);font-size:12px;font-weight:700;padding:6px 11px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--mut);margin-bottom:12px;">Cliente: <b>${esc(o.n)}</b></div>
+    <div id="editar-pedido-lineas">${filas}</div>
+    <div class="plato-line" style="background:var(--bg);">
+      <select id="editar-pedido-sel" style="flex:2;"><option value="">-- Agregar plato --</option>${opciones}</select>
+      <input type="number" id="editar-pedido-qty" min="1" value="1" style="width:52px;"/>
+      <button class="pl-rm" style="background:rgba(0,184,148,.12);border-color:rgba(0,184,148,.3);color:var(--grn);" onclick="editPedidoAddPlato()">+ Agregar</button>
+    </div>
+    <div style="text-align:right;font-size:14px;font-weight:700;color:var(--gold);margin:10px 0;">Total: ${fm(total)}</div>
+    <button class="btnp" onclick="guardarEditarPedido()">💾 Guardar cambios</button>
+    <button class="btns" onclick="cerrarEditarPedido()">Cancelar</button>
+  </div>`;
+}
+
+function editPedidoQty(i,delta){
+  if(!editPedidoItems[i]) return;
+  editPedidoItems[i].qty=Math.max(1,(Number(editPedidoItems[i].qty)||1)+delta);
+  renderEditarPedido();
+}
+function editPedidoSetQty(i,val){
+  if(!editPedidoItems[i]) return;
+  const n=Number(val);
+  editPedidoItems[i].qty=n>0?n:1;
+  renderEditarPedido();
+}
+function editPedidoRemove(i){
+  editPedidoItems.splice(i,1);
+  renderEditarPedido();
+}
+function editPedidoAddPlato(){
+  const sel=document.getElementById('editar-pedido-sel');
+  const qtyEl=document.getElementById('editar-pedido-qty');
+  if(!sel||!sel.value){ toast('Selecciona un plato 🙏'); return; }
+  const o=orders.find(x=>x.id===editPedidoId);
+  const tm=menuDB[o.dt]||[];
+  const p=tm[Number(sel.value)];
+  if(!p) return;
+  const qty=Math.max(1,Number(qtyEl.value)||1);
+  editPedidoItems.push({pi:Number(sel.value),nombre:p.nombre,precio:p.precio,qty});
+  renderEditarPedido();
+}
+function guardarEditarPedido(){
+  const o=orders.find(x=>x.id===editPedidoId);
+  if(!o) return;
+  if(!editPedidoItems.length){
+    toast('Un pedido no puede quedar sin platos — usa 🗑 para eliminarlo entero','gold',3500);
+    return;
+  }
+  o.items=editPedidoItems.map(it=>({pi:it.pi,nombre:it.nombre,precio:it.precio,qty:it.qty}));
+  saveAll();
+  renderOrd();
+  toast('✅ Pedido actualizado','green',2500);
+  cerrarEditarPedido();
+}
+
 function askDel(id){
   const o=orders.find(x=>x.id===id);if(!o)return;
   showConf('🗑️','¿Eliminar pedido?',`Pedido de "${o.n}"`,()=>{orders=orders.filter(x=>x.id!==id);saveAll();renderOrd();toast('Pedido eliminado','green');});
@@ -1515,6 +1626,17 @@ function openOM(){
 }
 function cmo(e){if(e.target===document.getElementById('mov-ord'))closeOM();}
 function closeOM(){document.getElementById('mov-ord').classList.remove('on');}
+
+function cancelarNuevoPedido(){
+  const tieneAlgo = document.getElementById('fn').value.trim()
+    || document.getElementById('fd').value.trim()
+    || document.getElementById('fno').value.trim()
+    || platoLines.some(pl=>pl.pi!=='');
+  if(!tieneAlgo){ closeOM(); return; }
+  showConf('✕','¿Descartar este pedido?','Vas a perder lo que escribiste hasta ahora.',()=>{
+    closeOM();resetOM();
+  });
+}
 
 function onDateChange(){
   const d=document.getElementById('fdate').value||td();
