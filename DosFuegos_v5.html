@@ -949,22 +949,10 @@ function loadFromFirebase(){
         '2026-06-19','2026-06-20','2026-06-21','2026-06-23'
       ];
 
-      const cartaFija = [
-        {nombre:'Plato del Día',precio:5500,ings:[]},
-        {nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},
-        {nombre:'Combo Asiático (Arroz Frito + 2 Lumpias + Pollo Agridulce a la Naranja)',precio:9990,ings:[]},
-        {nombre:'Chow Mein de Pollo',precio:5500,ings:[]},
-        {nombre:'Chow Mein de Camarón',precio:7500,ings:[]},
-        {nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},
-        {nombre:'Combo Kai',precio:9990,ings:[]},
-        {nombre:'Combo Kyu',precio:9990,ings:[]},
-        {nombre:'Combo Dos Fuegos',precio:15990,ings:[]}
-      ];
-      const empanadas = [
-        {nombre:'Empanada de Pollo',precio:3500,ings:[]},
-        {nombre:'Empanada Mechada',precio:3500,ings:[]},
-        {nombre:'Empanada Jamón Queso',precio:3500,ings:[]}
-      ];
+      // Se usa la MISMA función getCartaFijaActual() que el resto de la app, para que
+      // nunca más se desactualice una copia separada de la carta fija.
+      const cartaFija = getCartaFijaActual();
+      const empanadas = getEmpanadasActual();
 
       const MENU_FORZADO = {
         '2026-06-08': [{nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},{nombre:'Combo Asiático',precio:9990,ings:[]},{nombre:'Chow Mein de Pollo',precio:5500,ings:[]},{nombre:'Chow Mein de Camarón',precio:7500,ings:[]},{nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},{nombre:'Combo Kai',precio:9990,ings:[]},{nombre:'Combo Kyu',precio:9990,ings:[]},{nombre:'Combo Dos Fuegos',precio:15990,ings:[]}],
@@ -981,22 +969,23 @@ function loadFromFirebase(){
         '2026-06-19': cartaFija,
         '2026-06-20': cartaFija,
         '2026-06-21': empanadas,
-        '2026-06-23': [
+        '2026-06-23': cartaFija.concat([
           {nombre:'Club House',precio:9990,ings:[]},
           {nombre:'Lasaña de Pollo',precio:5500,ings:[]},
           {nombre:'Parrilla (Pollo y Chorizo) con Papas Fritas',precio:5500,ings:[]},
           {nombre:'Pasta Alfredo',precio:5500,ings:[]}
-        ]
+        ])
       };
       let menuForzado = false;
       FORCE_AFTER_FIREBASE.forEach(date => {
         if(MENU_FORZADO[date]){
-          menuDB[date] = MENU_FORZADO[date];
-          menuForzado = true;
+          const antes = JSON.stringify(menuDB[date]||[]);
+          mergeMenuDia(date, MENU_FORZADO[date]);
+          if(JSON.stringify(menuDB[date]) !== antes) menuForzado = true;
         }
       });
       if(menuForzado){
-        console.log('📅 Menús semana 08-14 jun forzados en Firebase');
+        console.log('📅 Menús forzados fusionados en Firebase (sin borrar lo existente)');
         saveToFirebase();
       }
       // ── FIN FORZADO MENÚS ────────────────────────────────────────────────────
@@ -2471,6 +2460,16 @@ function getEmpanadasActual(){
   ];
 }
 
+// Fusiona platos nuevos en el menú de un día sin borrar lo que ya estaba (por nombre, sin mayúsculas/espacios).
+// La usan forzarMenuSemana(), cargar3MesesMenu() y la carga automática al iniciar — así ningún botón
+// de "cargar carta fija" vuelve a borrar un plato especial que se haya agregado para un día puntual.
+function mergeMenuDia(fecha, platosNuevos){
+  const actual = Array.isArray(menuDB[fecha]) ? menuDB[fecha] : [];
+  const nombresActuales = actual.map(p=>(p.nombre||'').toLowerCase().trim());
+  const nuevos = (platosNuevos||[]).filter(p=>!nombresActuales.includes((p.nombre||'').toLowerCase().trim()));
+  menuDB[fecha] = actual.concat(nuevos);
+}
+
 function forzarMenuSemana(){
   const st = document.getElementById('menu-forzar-status');
   if(st) st.innerHTML = '⏳ Cargando...';
@@ -2480,8 +2479,7 @@ function forzarMenuSemana(){
 
   const semana = getWeek();
   semana.forEach((fecha, i) => {
-    if(i < 6) menuDB[fecha] = cartaFija;
-    else menuDB[fecha] = empanadas;
+    mergeMenuDia(fecha, i < 6 ? cartaFija : empanadas);
   });
 
   saveAll();
@@ -2508,7 +2506,7 @@ function cargar3MesesMenu(){
       const fecha = new Date(lunes);
       fecha.setDate(lunes.getDate() + (semanaIdx*7) + dia);
       const fechaStr = fd(fecha);
-      menuDB[fechaStr] = (dia < 6) ? cartaFija : empanadas;
+      mergeMenuDia(fechaStr, (dia < 6) ? cartaFija : empanadas);
       totalDias++;
     }
   }
