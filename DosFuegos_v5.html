@@ -153,8 +153,8 @@ body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;disp
 .btns{width:100%;padding:11px;background:#fff;border:1.5px solid var(--accent);border-radius:10px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:7px;transition:all .15s;}
 .btnd{width:100%;padding:12px;background:linear-gradient(135deg,var(--accent2),#C0392B);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:7px;}
 /* PLATOS MULTIPLES */
-.plato-line{display:flex;align-items:center;gap:6px;margin-bottom:7px;background:var(--bg);border:1.5px solid var(--bord);border-radius:9px;padding:8px 10px;}
-.plato-line select{flex:1;padding:6px 8px;background:var(--card);border:1px solid var(--bord);border-radius:7px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;}
+.plato-line{display:flex;align-items:center;gap:6px;margin-bottom:7px;background:var(--bg);border:1.5px solid var(--bord);border-radius:9px;padding:8px 10px;flex-wrap:wrap;}
+.plato-line select{flex:1;min-width:0;padding:6px 8px;background:var(--card);border:1px solid var(--bord);border-radius:7px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .plato-line input{width:52px;padding:6px 8px;background:var(--card);border:1px solid var(--bord);border-radius:7px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;text-align:center;flex-shrink:0;}
 .plato-line .pl-rm{background:rgba(255,32,32,.1);border:1px solid rgba(255,32,32,.2);color:var(--red);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px;flex-shrink:0;}
 .add-pl-btn{width:100%;padding:8px;background:rgba(225,112,85,.04);border:1.5px dashed rgba(225,112,85,.3);border-radius:8px;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:10px;}
