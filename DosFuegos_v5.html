@@ -949,7 +949,9 @@ function loadFromFirebase(){
         '2026-06-08','2026-06-09','2026-06-10','2026-06-11',
         '2026-06-12','2026-06-13','2026-06-14',
         '2026-06-15','2026-06-16','2026-06-17','2026-06-18',
-        '2026-06-19','2026-06-20','2026-06-21','2026-06-23'
+        '2026-06-19','2026-06-20','2026-06-21','2026-06-23',
+        '2026-06-29','2026-06-30','2026-07-01','2026-07-02',
+        '2026-07-03','2026-07-04','2026-07-05'
       ];
 
       // Se usa la MISMA función getCartaFijaActual() que el resto de la app, para que
@@ -957,6 +959,13 @@ function loadFromFirebase(){
       const cartaFija = getCartaFijaActual();
       const empanadas = getEmpanadasActual();
 
+      // Promo "¡Elige tu favorito!" — se suma a la semana del 29/06 al 05/07, sin reemplazar nada existente
+      const platosNuevosSemana = [
+        {nombre:'Club House',precio:9990,ings:[]},
+        {nombre:'Parrilla (Pollo, Cerdo, Chorizo) con Papas Rústicas',precio:7500,ings:[]},
+        {nombre:'Pasta con Pollo a la Crema',precio:5500,ings:[]},
+        {nombre:'Milanesa de Pollo con Papas Rústicas',precio:5500,ings:[]}
+      ];
       const MENU_FORZADO = {
         '2026-06-08': [{nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},{nombre:'Combo Asiático',precio:9990,ings:[]},{nombre:'Chow Mein de Pollo',precio:5500,ings:[]},{nombre:'Chow Mein de Camarón',precio:7500,ings:[]},{nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},{nombre:'Combo Kai',precio:9990,ings:[]},{nombre:'Combo Kyu',precio:9990,ings:[]},{nombre:'Combo Dos Fuegos',precio:15990,ings:[]}],
         '2026-06-09': [{nombre:'Arroz Frito de Pollo con 1 Lumpia',precio:6500,ings:[]},{nombre:'Combo Asiático',precio:9990,ings:[]},{nombre:'Chow Mein de Pollo',precio:5500,ings:[]},{nombre:'Chow Mein de Camarón',precio:7500,ings:[]},{nombre:'Handroll de Pollo o Kanikama',precio:5500,ings:[]},{nombre:'Combo Kai',precio:9990,ings:[]},{nombre:'Combo Kyu',precio:9990,ings:[]},{nombre:'Combo Dos Fuegos',precio:15990,ings:[]}],
@@ -977,7 +986,14 @@ function loadFromFirebase(){
           {nombre:'Lasaña de Pollo',precio:5500,ings:[]},
           {nombre:'Parrilla (Pollo y Chorizo) con Papas Fritas',precio:5500,ings:[]},
           {nombre:'Pasta Alfredo',precio:5500,ings:[]}
-        ])
+        ]),
+        '2026-06-29': platosNuevosSemana,
+        '2026-06-30': platosNuevosSemana,
+        '2026-07-01': platosNuevosSemana,
+        '2026-07-02': platosNuevosSemana,
+        '2026-07-03': platosNuevosSemana,
+        '2026-07-04': platosNuevosSemana,
+        '2026-07-05': platosNuevosSemana
       };
       let menuForzado = false;
       FORCE_AFTER_FIREBASE.forEach(date => {
